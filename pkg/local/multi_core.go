@@ -34,9 +34,11 @@ func GetTopNParallel(records []kv.Record, topN int, topNFn TopNSolver) []kv.Reco
 	}
 	chunks := split(records)
 	wg := sync.WaitGroup{}
+	reducedLen := 0
 	for _, chunk := range chunks {
 		wg.Add(1)
 		chunk := chunk
+		reducedLen += min(topN, len(chunk))
 		go func() {
 			defer wg.Done()
 			topNFn(chunk, topN)
@@ -45,7 +47,7 @@ func GetTopNParallel(records []kv.Record, topN int, topNFn TopNSolver) []kv.Reco
 	}
 	wg.Wait()
 	// reduce 操作，从每个 chunk 中获取 TopN，计算出总的 TopN
-	reducedTopN := make([]kv.Record, len(chunks)*topN)
+	reducedTopN := make([]kv.Record, reducedLen)
 	dstStep := min(topN, len(chunks[0]))
 	for i, chunk := range chunks {
 		copy(reducedTopN[i*dstStep:], chunk[:min(topN, len(chunk))])
