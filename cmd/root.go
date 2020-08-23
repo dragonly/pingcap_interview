@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"os"
 
@@ -62,6 +63,9 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
 // initConfig reads in config file and ENV variables if set.

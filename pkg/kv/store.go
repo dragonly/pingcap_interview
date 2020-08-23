@@ -1,21 +1,27 @@
 package kv
 
 type Record struct {
-	Key   int    // 主键，排序字段
-	Data  []byte // 数据
+	Key  int    // 主键，排序字段
+	Data []byte // 数据
 }
 
-type RecordKeyHeap []Record
+type SortByRecordKey []Record
 
-func (h RecordKeyHeap) Len() int           { return len(h) }
-func (h RecordKeyHeap) Less(i, j int) bool { return h[i].Key < h[j].Key }
-func (h RecordKeyHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (h SortByRecordKey) Len() int           { return len(h) }
+func (h SortByRecordKey) Less(i, j int) bool { return h[i].Key < h[j].Key }
+func (h SortByRecordKey) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
+type RecordKeyMaxHeap []Record
 
-func (h *RecordKeyHeap) Push(x interface{}) {
+func (h RecordKeyMaxHeap) Len() int           { return len(h) }
+func (h RecordKeyMaxHeap) Less(i, j int) bool { return h[i].Key > h[j].Key }
+func (h RecordKeyMaxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *RecordKeyMaxHeap) Push(x interface{}) {
 	*h = append(*h, x.(Record))
 }
-func (h *RecordKeyHeap) Pop() interface{} {
+
+func (h *RecordKeyMaxHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
 	x := old[n-1]

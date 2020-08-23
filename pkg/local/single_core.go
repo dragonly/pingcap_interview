@@ -1,50 +1,34 @@
 package local
 
 import (
-	"fmt"
+	"container/heap"
 	"github.com/dragonly/pingcap_interview/pkg/kv"
-	"github.com/dragonly/pingcap_interview/pkg/local/single_core"
-	"math/rand"
+	"github.com/rs/zerolog/log"
+	"sort"
 )
 
-// generateRandomRecords 生成 Key 唯一且随机的包含 n 个 Record 的数组，data 数据随机
-func generateRandomRecords(n int) []kv.Record {
-	ret := make([]kv.Record, n)
-	data := make([]byte, 10)
-	existingKeys := make(map[int]struct{}, n)
-	var record kv.Record
-	for i := 0; i < n; i++ {
-		var key int
-		for {
-			key = rand.Int()
-			if _, exist := existingKeys[key]; !exist {
-				break
-			}
-			fmt.Printf("colliding key: %d", key)
-		}
-		if n, err := rand.Read(data); err != nil || n != 10 {
-			panic(fmt.Sprintf("err: %s, n: %d", err, n))
-		}
-		data1 := make([]byte, 10)
-		copy(data1, data)
-		record = kv.Record{Key: key, Data: data1}
-		ret[i] = record
+// GetTopNBaseline 作为 baseline，先排序再取 topN，用来检验其他内存版本算法的正确性
+func GetTopNBaseline(records []kv.Record, topN int) []kv.Record {
+	if len(records) < topN {
+		return records
 	}
-	return ret
+	sort.Sort(kv.SortByRecordKey(records))
+	return records[:topN]
 }
 
-func run(s *kv.Store, topN int, getTopN TopNSolver) []kv.Record {
-	return getTopN(s.Records, topN)
-}
-
-func Run() {
-	records := generateRandomRecords(100)
-	fmt.Println(len(records))
-	//fmt.Println(records)
-	store := kv.Store{Records: records}
-	topN := 10
-	result1 := run(&store, topN, single_core.GetTopNBaseline)
-	result2 := run(&store, topN, single_core.GetTopNByMinHeap)
-	fmt.Printf("result1:\n%v\n", result1)
-	fmt.Printf("result2:\n%v\n", result2)
+// GetTopNByMaxHeap 在 records 的前 min(TopN, len(records)) 范围内原地建堆，因此会导致传入数据发生变化
+func GetTopNByMaxHeap(records []kv.Record, topN int) []kv.Record {
+	if len(records) < topN {
+		return records
+	}
+	h := kv.RecordKeyMaxHeap(records[:topN])
+	heap.Init(&h)
+	log.Debug().Msgf("init: %v", h)
+	for _, r := range records[topN:] {
+		log.Debug().Msgf("push: %v %v", h, r)
+		heap.Push(&h, r)
+		x := heap.Pop(&h)
+		log.Debug().Msgf("pop:  %v %v", h, x)
+	}
+	return h
 }
