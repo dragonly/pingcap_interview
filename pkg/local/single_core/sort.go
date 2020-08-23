@@ -1,3 +1,0 @@
-package single_core
-
-

@@ -16,8 +16,8 @@ func GetTopNBaseline(records []kv.Record, topN int) []kv.Record {
 	return records[:topN]
 }
 
-// GetTopNByMaxHeap 在 records 的前 min(TopN, len(records)) 范围内原地建堆，因此会导致传入数据发生变化
-func GetTopNByMaxHeap(records []kv.Record, topN int) []kv.Record {
+// GetTopNMaxHeap 在 records 的前 min(TopN, len(records)) 范围内原地建堆，因此会导致传入数据发生变化
+func GetTopNMaxHeap(records []kv.Record, topN int) []kv.Record {
 	if len(records) < topN {
 		return records
 	}

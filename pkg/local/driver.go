@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	n    = 100000
+	n    = 1000
 	topN = 10
 	//maxKey = math.MaxInt64
 	maxKey = n * 2
@@ -30,9 +30,9 @@ func Run() {
 
 	//store := kv.Store{Records: records}
 	result1 := GetTopNBaseline(records1, topN)
-	result2 := GetTopNByMaxHeap(records2, topN)
+	result2 := GetTopNMaxHeap(records2, topN)
 	result3 := GetTopNParallel(records3, topN, GetTopNBaseline)
-	result4 := GetTopNParallel(records3, topN, GetTopNByMaxHeap)
+	result4 := GetTopNParallel(records3, topN, GetTopNMaxHeap)
 	sort.Sort(kv.SortByRecordKey(result1))
 	sort.Sort(kv.SortByRecordKey(result2))
 	sort.Sort(kv.SortByRecordKey(result3))
