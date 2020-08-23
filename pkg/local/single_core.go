@@ -25,10 +25,16 @@ func GetTopNMaxHeap(records []kv.Record, topN int) []kv.Record {
 	heap.Init(&h)
 	log.Debug().Msgf("init: %v", h)
 	for _, r := range records[topN:] {
-		log.Debug().Msgf("push: %v %v", h, r)
-		heap.Push(&h, r)
-		x := heap.Pop(&h)
-		log.Debug().Msgf("pop:  %v %v", h, x)
+		if r.Key < h[0].Key {
+			h[0].Assign(r)
+			log.Debug().Msgf("replace: %v", h)
+			heap.Fix(&h, 0)
+			log.Debug().Msgf("fix: %v", h)
+			//log.Debug().Msgf("push: %v %v", h, r)
+			//heap.Push(&h, r)
+			//x := heap.Pop(&h)
+			//log.Debug().Msgf("pop:  %v %v", h, x)
+		}
 	}
 	return h
 }

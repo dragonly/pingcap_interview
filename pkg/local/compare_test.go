@@ -42,7 +42,7 @@ func TestHeapResult(t *testing.T) {
 	}
 }
 
-func BenchmarkBaselineSingle(b *testing.B) {
+func BenchmarkLocal(b *testing.B) {
 	records := GenerateRandomRecords(n)
 	b.ResetTimer()
 	b.Run("BaselineSingle", func(b *testing.B) {

@@ -3,14 +3,15 @@ package local
 import (
 	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/kv"
+	"math"
 	"sort"
 )
 
 const (
-	n    = 1000
+	n    = 1000000
 	topN = 10
-	//maxKey = math.MaxInt64
-	maxKey = n * 2
+	maxKey = math.MaxInt64
+	//maxKey = n * 2
 )
 
 func Run() {

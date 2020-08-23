@@ -9,14 +9,14 @@ import (
 
 func split(records []kv.Record) [][]kv.Record {
 	// TODO: 优化数据量小的情况，或许可以做个自适应
-	cores := runtime.NumCPU()
-	log.Info().Msgf("cpu cores: %d", cores)
-	chunkSize := len(records) / cores
-	ret := make([][]kv.Record, cores)
-	for i := 0; i < cores-1; i++ {
+	workers := runtime.NumCPU() * 2
+	log.Info().Msgf("cpu workers: %d", workers)
+	chunkSize := len(records) / workers
+	ret := make([][]kv.Record, workers)
+	for i := 0; i < workers-1; i++ {
 		ret[i] = records[i*chunkSize : (i+1)*chunkSize]
 	}
-	ret[cores-1] = records[(cores-1)*chunkSize:]
+	ret[workers-1] = records[(workers-1)*chunkSize:]
 	return ret
 }
 

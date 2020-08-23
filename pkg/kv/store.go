@@ -5,6 +5,11 @@ type Record struct {
 	Data []byte // 数据
 }
 
+func (r *Record) Assign(r1 Record) {
+	(*r).Key = r1.Key
+	copy((*r).Data, r1.Data)
+}
+
 type SortByRecordKey []Record
 
 func (h SortByRecordKey) Len() int           { return len(h) }

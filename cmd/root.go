@@ -65,7 +65,7 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 }
 
 // initConfig reads in config file and ENV variables if set.
