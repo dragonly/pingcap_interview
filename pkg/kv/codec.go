@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type RecordGenerator struct {
@@ -16,8 +17,17 @@ type RecordGenerator struct {
 	DataSizeMax int // Record.Data 字段最大长度
 }
 
+func (g *RecordGenerator) Init() {
+	rand.Seed(time.Now().Unix())
+}
+
 func (g *RecordGenerator) Generate() Record {
-	dataLen := g.DataSizeMin + rand.Int()%(g.DataSizeMax-g.DataSizeMin) // 这不是一个真正的均匀分布，不过在这个场景下影响不大
+	var dataLen int
+	if g.DataSizeMax-g.DataSizeMin == 0 {
+		dataLen = g.DataSizeMin
+	} else {
+		dataLen = g.DataSizeMin + rand.Int()%(g.DataSizeMax-g.DataSizeMin) // 这不是一个真正的均匀分布，不过在这个场景下影响不大
+	}
 	record := Record{
 		Key:  rand.Int63(),
 		Data: make([]byte, dataLen),
@@ -112,13 +122,18 @@ func (m *FileBlockWriter) write(record Record) bool {
 
 // genRecordsFiles 生成分块的 record 文件，为了简化处理，暂时将跨当前文件 block 边缘的 record 放入下一个 block，
 // 并将前一个 block 结尾 pad 成 0 字节
-func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter) {
+func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []Record {
+	var records []Record
 	for {
 		record := rGen.Generate()
 		if !fbMgr.write(record) {
 			break
 		}
+		if debug {
+			records = append(records, record)
+		}
 	}
+	return records
 }
 
 func GenRecordsFiles() {
@@ -126,12 +141,13 @@ func GenRecordsFiles() {
 		DataSizeMin: 1 * 1024,
 		DataSizeMax: 100 * 1024,
 	}
+	rGen.Init()
 	fbMgr := FileBlockWriter{
 		DataFilenameBase: "data/test",
 		BlockSize:        64 * 1024 * 1024,
 		MaxBlockNum:      3,
 	}
-	genRecordsFiles(rGen, fbMgr)
+	genRecordsFiles(rGen, fbMgr, false)
 }
 
 func ReadRecordsFile(dataFilenameBase string, blockIndex int64) []Record {
@@ -162,6 +178,7 @@ func ReadRecordsFile(dataFilenameBase string, blockIndex int64) []Record {
 		keyBytes := dataBytes[bytesRead : bytesRead+8]
 		records[i].Key = int64(binary.LittleEndian.Uint64(keyBytes))
 		records[i].Data = dataBytes[bytesRead+8 : bytesRead+8+recordLen]
+		bytesRead += 8 + recordLen
 	}
 	return records
 }
