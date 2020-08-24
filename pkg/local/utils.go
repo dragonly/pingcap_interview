@@ -31,7 +31,7 @@ func GenerateRandomRecords(n int) []kv.Record {
 		}
 		data1 := make([]byte, dataLen)
 		copy(data1, data)
-		record = kv.Record{Key: key, Data: data1}
+		record = kv.Record{Key: int64(key), Data: data1}
 		ret[i] = record
 	}
 	return ret

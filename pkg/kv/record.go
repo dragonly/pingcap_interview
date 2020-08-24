@@ -1,7 +1,7 @@
 package kv
 
 type Record struct {
-	Key  int    // 主键，排序字段
+	Key  int64    // 主键，排序字段
 	Data []byte // 数据
 }
 
