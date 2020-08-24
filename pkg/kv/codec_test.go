@@ -2,6 +2,7 @@ package kv
 
 import (
 	"github.com/rs/zerolog/log"
+	"math"
 	"os"
 	"testing"
 )
@@ -12,6 +13,7 @@ func TestCodec(t *testing.T) {
 		os.Remove("test_codec.0.meta")
 	}()
 	rGen := RecordGenerator{
+		MaxKey:      math.MaxInt64,
 		DataSizeMin: 1 * 1024,
 		DataSizeMax: 100 * 1024,
 	}

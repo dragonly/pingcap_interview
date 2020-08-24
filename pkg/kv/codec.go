@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -13,8 +14,9 @@ import (
 )
 
 type RecordGenerator struct {
-	DataSizeMin int // Record.Data 字段最小长度
-	DataSizeMax int // Record.Data 字段最大长度
+	MaxKey      int64 // Record.Key 最大值
+	DataSizeMin int   // Record.Data 字段最小长度
+	DataSizeMax int   // Record.Data 字段最大长度
 }
 
 func (g *RecordGenerator) Init() {
@@ -29,7 +31,7 @@ func (g *RecordGenerator) Generate() Record {
 		dataLen = g.DataSizeMin + rand.Int()%(g.DataSizeMax-g.DataSizeMin) // 这不是一个真正的均匀分布，不过在这个场景下影响不大
 	}
 	record := Record{
-		Key:  rand.Int63(),
+		Key:  rand.Int63() % g.MaxKey,
 		Data: make([]byte, dataLen),
 	}
 	if n, err := rand.Read(record.Data); err != nil || n != dataLen {
@@ -120,12 +122,39 @@ func (m *FileBlockWriter) write(record Record) bool {
 	}
 }
 
+func GenRecords(n int) []Record {
+	rGen := RecordGenerator{
+		MaxKey:      math.MaxInt64,
+		DataSizeMin: 0,
+		DataSizeMax: 0,
+	}
+	rGen.Init()
+	var records []Record
+	existingKeys := make(map[int64]struct{}, 1024)
+	log.Debug().Msg("generating records")
+	for i := 0; i < n; i++ {
+		if i % 10000 == 0 {
+			log.Debug().Msgf("i=%d", i)
+		}
+		record := rGen.Generate()
+		if _, exist := existingKeys[record.Key]; exist {
+			continue
+		}
+		records = append(records, record)
+	}
+	return records
+}
+
 // genRecordsFiles 生成分块的 record 文件，为了简化处理，暂时将跨当前文件 block 边缘的 record 放入下一个 block，
 // 并将前一个 block 结尾 pad 成 0 字节
 func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []Record {
 	var records []Record
+	existingKeys := make(map[int64]struct{}, 1024)
 	for {
 		record := rGen.Generate()
+		if _, exist := existingKeys[record.Key]; exist {
+			continue
+		}
 		if !fbMgr.write(record) {
 			break
 		}
@@ -138,6 +167,7 @@ func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []
 
 func GenRecordsFiles() {
 	rGen := RecordGenerator{
+		MaxKey:      math.MaxInt64,
 		DataSizeMin: 1 * 1024,
 		DataSizeMax: 100 * 1024,
 	}

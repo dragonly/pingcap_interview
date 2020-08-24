@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	n    = 1000000
+	n    = 10000
 	topN = 10
 	maxKey = math.MaxInt64
 	//maxKey = n * 2
 )
 
 func Run() {
-	records := GenerateRandomRecords(n)
+	records := kv.GenRecords(n)
 	records1 := make([]kv.Record, n)
 	records2 := make([]kv.Record, n)
 	records3 := make([]kv.Record, n)

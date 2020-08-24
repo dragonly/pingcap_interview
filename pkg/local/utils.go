@@ -40,6 +40,7 @@ func GenerateRandomRecords(n int) []kv.Record {
 func copyRecords(dst, src []kv.Record) {
 	for i, _ := range src {
 		dst[i].Key = src[i].Key
+		dst[i].Data = make([]byte, len(src[i].Data))
 		copy(dst[i].Data, src[i].Data)
 	}
 }

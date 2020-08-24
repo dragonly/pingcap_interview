@@ -3,18 +3,20 @@ package local
 import (
 	"github.com/dragonly/pingcap_interview/pkg/kv"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"reflect"
 	"sort"
 	"testing"
 )
 
 func init() {
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.With().Caller().Logger()
 }
 
 func TestHeapResult(t *testing.T) {
 	// 由于算法会原地修改数据，需要各自 copy 一份输入数据
-	records := GenerateRandomRecords(n)
+	records := kv.GenRecords(n)
 	records1 := make([]kv.Record, n)
 	records2 := make([]kv.Record, n)
 	records3 := make([]kv.Record, n)
@@ -57,7 +59,7 @@ func TestHeapResult(t *testing.T) {
 }
 
 func BenchmarkLocal(b *testing.B) {
-	records := GenerateRandomRecords(n)
+	records := kv.GenRecords(n)
 	b.ResetTimer()
 	b.Run("BaselineSingle", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
