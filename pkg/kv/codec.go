@@ -4,8 +4,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"io/ioutil"
 	"math/rand"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type RecordGenerator struct {
@@ -25,7 +28,7 @@ func (g *RecordGenerator) Generate() Record {
 	return record
 }
 
-type FileBlockManager struct {
+type FileBlockWriter struct {
 	DataFilenameBase string // data 文件名，后缀会添加 meta 或 block index
 	BlockSize        int    // 文件分块大小，单位 byte
 	MaxBlockNum      int    // 最大块数
@@ -36,7 +39,7 @@ type FileBlockManager struct {
 	dataFileBytesWrote int      // 已经写入 data 文件的 byte 数
 }
 
-func (m *FileBlockManager) rotateFiles() {
+func (m *FileBlockWriter) rotateFiles() {
 	if m.fMeta != nil {
 		dataFileBytesRemaining := m.BlockSize - m.dataFileBytesWrote
 		pad := make([]byte, dataFileBytesRemaining)
@@ -69,7 +72,7 @@ func (m *FileBlockManager) rotateFiles() {
 	}
 }
 
-func (m *FileBlockManager) writeFiles(record Record) {
+func (m *FileBlockWriter) writeFiles(record Record) {
 	keyBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(keyBytes, uint64(record.Key))
 	if n, err := m.fData.Write(keyBytes); err != nil || n != 8 {
@@ -85,7 +88,7 @@ func (m *FileBlockManager) writeFiles(record Record) {
 	m.dataFileBytesWrote += 8 + len(record.Data)
 }
 
-func (m *FileBlockManager) write(record Record) bool {
+func (m *FileBlockWriter) write(record Record) bool {
 	if m.fMeta == nil {
 		m.rotateFiles()
 	}
@@ -109,7 +112,7 @@ func (m *FileBlockManager) write(record Record) bool {
 
 // genRecordsFiles 生成分块的 record 文件，为了简化处理，暂时将跨当前文件 block 边缘的 record 放入下一个 block，
 // 并将前一个 block 结尾 pad 成 0 字节
-func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockManager) {
+func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter) {
 	for {
 		record := rGen.Generate()
 		if !fbMgr.write(record) {
@@ -123,10 +126,42 @@ func GenRecordsFiles() {
 		DataSizeMin: 1 * 1024,
 		DataSizeMax: 100 * 1024,
 	}
-	fbMgr := FileBlockManager{
+	fbMgr := FileBlockWriter{
 		DataFilenameBase: "data/test",
 		BlockSize:        64 * 1024 * 1024,
 		MaxBlockNum:      3,
 	}
 	genRecordsFiles(rGen, fbMgr)
+}
+
+func ReadRecordsFile(dataFilenameBase string, blockIndex int64) []Record {
+	metadataFilename := fmt.Sprintf("%s.%d.meta", dataFilenameBase, blockIndex)
+	dataFilename := fmt.Sprintf("%s.%d.data", dataFilenameBase, blockIndex)
+	var err error
+	metadataBytes, err := ioutil.ReadFile(metadataFilename)
+	if err != nil {
+		panic(err)
+	}
+	dataBytes, err := ioutil.ReadFile(dataFilename)
+	if err != nil {
+		panic(err)
+	}
+	metadataStr := string(metadataBytes)
+	metadataStr = metadataStr[:len(metadataStr)-1] // remove last empty line
+	metadataStrArr := strings.Split(metadataStr, "\n")
+	recordLenArr := make([]int, len(metadataStrArr))
+	for i, recordLenStr := range metadataStrArr {
+		recordLenArr[i], err = strconv.Atoi(recordLenStr)
+		if err != nil {
+			panic(err)
+		}
+	}
+	bytesRead := 0
+	records := make([]Record, len(recordLenArr))
+	for i, recordLen := range recordLenArr {
+		keyBytes := dataBytes[bytesRead : bytesRead+8]
+		records[i].Key = int64(binary.LittleEndian.Uint64(keyBytes))
+		records[i].Data = dataBytes[bytesRead+8 : bytesRead+8+recordLen]
+	}
+	return records
 }

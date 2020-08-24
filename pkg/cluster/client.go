@@ -21,8 +21,8 @@ func GetTopNKeysInRange(minKey, maxKey int64) {
 	defer cancel()
 	resp, err := client.TopNInBlock(ctx, &TopNInBlockRequest{
 		DataBlock: &DataBlock{
-			Filename: "test",
-			BlockId:  0,
+			Filename: "data/test",
+			BlockIndex:  0,
 		},
 		KeyRange: &KeyRange{
 			MaxKey: maxKey,

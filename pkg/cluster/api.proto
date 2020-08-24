@@ -20,7 +20,7 @@ message KeyRange {
 
 message DataBlock {
     string filename = 1;
-    int64 block_id = 2;
+    int64 block_index = 2;
 }
 
 message TopNInBlockResponse {
