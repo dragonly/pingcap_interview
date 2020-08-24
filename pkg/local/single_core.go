@@ -38,3 +38,11 @@ func GetTopNMaxHeap(records []kv.Record, topN int) []kv.Record {
 	}
 	return h
 }
+
+func GetTopNQuickSelect(records []kv.Record, topN int) []kv.Record {
+	if len(records) < topN {
+		return records
+	}
+	QuickSelect(kv.SortByRecordKey(records), topN)
+	return records[:topN]
+}
