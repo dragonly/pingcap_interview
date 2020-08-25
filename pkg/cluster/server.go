@@ -18,8 +18,9 @@ type server struct {
 	UnimplementedTopNServer
 }
 
+// TopNInBlock 读取一个文件 block，计算其中的 topN，并通过 gRPC 返回结果
 func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (*TopNInBlockResponse, error) {
-	log.Info().Interface("request", request).Msg("received request")
+	log.Info().Interface("request", request).Msg("TopNInBlock received request")
 	if request.TopN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", request.TopN)
 	}
@@ -48,6 +49,36 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 			Int64("local.GetTopNMaxHeap()", t2.Sub(t1).Microseconds()).
 			Int64("copy result", t3.Sub(t2).Microseconds())).
 		Msg("return topN records in block")
+	return &TopNInBlockResponse{
+		Records: pRecords,
+	}, nil
+}
+
+// TopNAll 一次性计算所有文件 block 的 topN，用于验证计算正确性
+func (s *server) TopNAll(ctx context.Context, request *TopNInBlockRequest) (*TopNInBlockResponse, error) {
+	log.Info().Interface("request", request).Msg("TopNAll received request")
+	blockNum := viper.GetInt("cluster.data.file.blockNum")
+	topN := request.TopN
+	if topN <= 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
+	}
+
+	var topNRecords []storage.Record
+	for i := 0; i < blockNum; i++ {
+		records := storage.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
+		tmp := local.GetTopNMaxHeap(records, int(topN))
+		for _, r := range tmp {
+			topNRecords = append(topNRecords, r)
+		}
+	}
+	topNRecords = local.GetTopNMaxHeap(topNRecords, int(topN))
+	pRecords := make([]*Record, len(topNRecords))
+	for i, r := range topNRecords {
+		pRecords[i] = new(Record)
+		pRecords[i].Key = r.Key
+		pRecords[i].Data = make([]byte, len(r.Data))
+		copy(pRecords[i].Data, r.Data)
+	}
 	return &TopNInBlockResponse{
 		Records: pRecords,
 	}, nil

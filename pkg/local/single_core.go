@@ -3,7 +3,6 @@ package local
 import (
 	"container/heap"
 	"github.com/dragonly/pingcap_interview/pkg/storage"
-	"github.com/rs/zerolog/log"
 	"sort"
 )
 
@@ -23,17 +22,13 @@ func GetTopNMaxHeap(records []storage.Record, topN int) []storage.Record {
 	}
 	h := storage.RecordKeyMaxHeap(records[:topN])
 	heap.Init(&h)
-	log.Debug().Msgf("init: %v", h)
+	//log.Debug().Msgf("init: %v", h)
 	for _, r := range records[topN:] {
 		if r.Key < h[0].Key {
 			h[0].Assign(r)
-			log.Debug().Msgf("replace: %v", h)
+			//log.Debug().Msgf("replace: %v", h)
 			heap.Fix(&h, 0)
-			log.Debug().Msgf("fix: %v", h)
-			//log.Debug().Msgf("push: %v %v", h, r)
-			//heap.Push(&h, r)
-			//x := heap.Pop(&h)
-			//log.Debug().Msgf("pop:  %v %v", h, x)
+			//log.Debug().Msgf("fix: %v", h)
 		}
 	}
 	return h

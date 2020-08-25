@@ -2,11 +2,11 @@ cluster:
   data:
     record:
       maxKey: 4611686018427387904  # math.MaxInt64
-      dataSizeMin: 1024
-      dataSizeMax: 102400
+      dataSizeMin: 1024  # 1KB
+      dataSizeMax: 10240  # 10KB
     file:
       path: data/test
-      blockSize: 67108864
+      blockSize: 536870912  # 512MB
       blockNum: 3
   mapper:
     listen:

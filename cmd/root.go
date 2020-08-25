@@ -26,7 +26,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile string
+	debug   *bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -59,7 +62,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pingcap_interview.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/config.yaml)")
+	debug = rootCmd.PersistentFlags().Bool("debug", false, "enable debug logging")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -67,7 +71,6 @@ func init() {
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
 	log.Logger = log.With().Caller().Logger()
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -93,5 +96,12 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+
+	fmt.Printf("debug=%t\n", *debug)
+	if *debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 }

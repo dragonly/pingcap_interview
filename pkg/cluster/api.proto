@@ -6,6 +6,7 @@ option go_package = 'github.com/dragonly/pingcap_interview/pkg/cluster';
 
 service TopN {
     rpc TopNInBlock (TopNInBlockRequest) returns (TopNInBlockResponse) {}
+    rpc TopNAll (TopNInBlockRequest) returns (TopNInBlockResponse) {}
 }
 
 message TopNInBlockRequest {

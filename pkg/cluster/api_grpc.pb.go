@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TopNClient interface {
 	TopNInBlock(ctx context.Context, in *TopNInBlockRequest, opts ...grpc.CallOption) (*TopNInBlockResponse, error)
+	TopNAll(ctx context.Context, in *TopNInBlockRequest, opts ...grpc.CallOption) (*TopNInBlockResponse, error)
 }
 
 type topNClient struct {
@@ -37,11 +38,21 @@ func (c *topNClient) TopNInBlock(ctx context.Context, in *TopNInBlockRequest, op
 	return out, nil
 }
 
+func (c *topNClient) TopNAll(ctx context.Context, in *TopNInBlockRequest, opts ...grpc.CallOption) (*TopNInBlockResponse, error) {
+	out := new(TopNInBlockResponse)
+	err := c.cc.Invoke(ctx, "/mapper.TopN/TopNAll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TopNServer is the server API for TopN service.
 // All implementations must embed UnimplementedTopNServer
 // for forward compatibility
 type TopNServer interface {
 	TopNInBlock(context.Context, *TopNInBlockRequest) (*TopNInBlockResponse, error)
+	TopNAll(context.Context, *TopNInBlockRequest) (*TopNInBlockResponse, error)
 	mustEmbedUnimplementedTopNServer()
 }
 
@@ -51,6 +62,9 @@ type UnimplementedTopNServer struct {
 
 func (*UnimplementedTopNServer) TopNInBlock(context.Context, *TopNInBlockRequest) (*TopNInBlockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TopNInBlock not implemented")
+}
+func (*UnimplementedTopNServer) TopNAll(context.Context, *TopNInBlockRequest) (*TopNInBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TopNAll not implemented")
 }
 func (*UnimplementedTopNServer) mustEmbedUnimplementedTopNServer() {}
 
@@ -76,6 +90,24 @@ func _TopN_TopNInBlock_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TopN_TopNAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TopNInBlockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TopNServer).TopNAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/mapper.TopN/TopNAll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TopNServer).TopNAll(ctx, req.(*TopNInBlockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _TopN_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "mapper.TopN",
 	HandlerType: (*TopNServer)(nil),
@@ -83,6 +115,10 @@ var _TopN_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TopNInBlock",
 			Handler:    _TopN_TopNInBlock_Handler,
+		},
+		{
+			MethodName: "TopNAll",
+			Handler:    _TopN_TopNAll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
