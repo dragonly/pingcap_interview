@@ -33,6 +33,7 @@ func DoRequest(client TopNClient, req *TopNInBlockRequest) (*TopNInBlockResponse
 	if resp != nil {
 		for _, r := range resp.Records {
 			r.Data = r.Data[:10]
+			r.Data = nil
 		}
 	}
 	log.Info().Interface("response", resp).Msg("response from mapper")
@@ -48,12 +49,12 @@ func (w *Worker) Start() {
 			w.WorkerChan <- *w
 			select {
 			case job := <-w.JobChan:
-				log.Info().Msgf("start job, id: %d", job.ID)
+				log.Info().Int("id", job.ID).Int("channels", len(w.JobChan)).Msg("start job")
 				resp, err := DoRequest(*w.Client, job.Request)
 				if err != nil {
-					log.Error().Msgf("job failed, id: %d, error: %s", job.ID, err)
+					log.Error().Int("id", job.ID).Str("error", err.Error()).Msg("job failed")
 				} else {
-					log.Info().Msgf("job success, id: %d", job.ID)
+					log.Error().Int("id", job.ID).Msg("job success")
 				}
 				result := Result{
 					Job:      job,
@@ -114,16 +115,21 @@ func (d *Dispatcher) Start() {
 		for {
 			select {
 			case job := <-d.JobChan: // 从外部获取任务
+				log.Debug().Int("id", job.ID).Int("channels", len(d.JobChan)).Msg("dispatcher received job")
 				worker := <-d.WorkerChan // 获取空闲 worker
-				worker.JobChan <- job    // 分配任务给 worker
+				log.Debug().Int("id", job.ID).Int("channels", len(d.WorkerChan)).Msg("got idle worker")
+				worker.JobChan <- job // 分配任务给 worker
+				log.Debug().Int("channels", len(worker.JobChan)).Msg("dispatched job")
 			case result := <-d.JobRescheduleChan:
 				if result.Error != nil { // 失败任务重试
-					log.Error().Msgf("re-dispatch job, id: %d", result.Job)
+					log.Error().Int("id", result.Job.ID).Msg("re-dispatch job")
 					d.JobChan <- result.Job
 				} else {
-
+					log.Info().Int("id", result.Job.ID).Msg("return successful job")
+					d.JobResultChan <- result
 				}
 			case <-d.StopChan:
+				log.Info().Msg("stopping workers")
 				for _, w := range workers {
 					w.Stop()
 				}

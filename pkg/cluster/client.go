@@ -20,6 +20,7 @@ func GetTopNKeysInRange(minKey, maxKey, topN int64) {
 		Msg("run GetTopNKeysInRange")
 
 	// 连接所有计算节点
+	log.Info().Msg("connecting calculating nodes")
 	var clients []TopNClient
 	for _, addr := range addresses {
 		ctxDial, cancelDial := context.WithTimeout(context.Background(), time.Second)
@@ -47,7 +48,7 @@ func GetTopNKeysInRange(minKey, maxKey, topN int64) {
 			Request: &TopNInBlockRequest{
 				DataBlock: &DataBlock{
 					Filename:   filename,
-					BlockIndex: 0,
+					BlockIndex: int64(i),
 				},
 				KeyRange: &KeyRange{
 					MaxKey: maxKey,
@@ -60,9 +61,13 @@ func GetTopNKeysInRange(minKey, maxKey, topN int64) {
 	}
 
 	// 调度计算任务
+	log.Info().Msg("dispatching jobs")
 	dispatcher := NewDispatcher(clients)
+	dispatcher.Start()
 	for _, job := range jobs {
+		log.Debug().Int("id", job.ID).Int("channels", len(dispatcher.JobChan)).Msg("dispatching job")
 		dispatcher.JobChan <- job
+		log.Debug().Int("id", job.ID).Int("channels", len(dispatcher.JobChan)).Msg("dispatched job")
 	}
 
 	// 获取分块任务 topN，合并最终结果
