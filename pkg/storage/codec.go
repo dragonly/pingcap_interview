@@ -1,4 +1,4 @@
-package kv
+package storage
 
 import (
 	"encoding/binary"

@@ -2,8 +2,8 @@ package cluster
 
 import (
 	"context"
-	"github.com/dragonly/pingcap_interview/pkg/kv"
 	"github.com/dragonly/pingcap_interview/pkg/local"
+	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -23,8 +23,11 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	if request.TopN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", request.TopN)
 	}
+	// TODO: 可以遵守一下 deadline，避免浪费计算资源
+	//deadline, _ := ctx.Deadline()
+	//fmt.Println(time.Now().Sub(deadline))
 	t0 := time.Now()
-	records := kv.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
+	records := storage.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
 	t1 := time.Now()
 	topNRecords := local.GetTopNMaxHeap(records, int(request.TopN))
 	t2 := time.Now()

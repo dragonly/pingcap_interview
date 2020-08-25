@@ -2,26 +2,26 @@ package local
 
 import (
 	"container/heap"
-	"github.com/dragonly/pingcap_interview/pkg/kv"
+	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog/log"
 	"sort"
 )
 
 // GetTopNBaseline 作为 baseline，先排序再取 topN，用来检验其他内存版本算法的正确性
-func GetTopNBaseline(records []kv.Record, topN int) []kv.Record {
+func GetTopNBaseline(records []storage.Record, topN int) []storage.Record {
 	if len(records) < topN {
 		return records
 	}
-	sort.Sort(kv.SortByRecordKey(records))
+	sort.Sort(storage.SortByRecordKey(records))
 	return records[:topN]
 }
 
 // GetTopNMaxHeap 在 records 的前 min(TopN, len(records)) 范围内原地建堆，因此会导致传入数据发生变化
-func GetTopNMaxHeap(records []kv.Record, topN int) []kv.Record {
+func GetTopNMaxHeap(records []storage.Record, topN int) []storage.Record {
 	if len(records) < topN {
 		return records
 	}
-	h := kv.RecordKeyMaxHeap(records[:topN])
+	h := storage.RecordKeyMaxHeap(records[:topN])
 	heap.Init(&h)
 	log.Debug().Msgf("init: %v", h)
 	for _, r := range records[topN:] {
@@ -39,10 +39,10 @@ func GetTopNMaxHeap(records []kv.Record, topN int) []kv.Record {
 	return h
 }
 
-func GetTopNQuickSelect(records []kv.Record, topN int) []kv.Record {
+func GetTopNQuickSelect(records []storage.Record, topN int) []storage.Record {
 	if len(records) < topN {
 		return records
 	}
-	QuickSelect(kv.SortByRecordKey(records), topN)
+	QuickSelect(storage.SortByRecordKey(records), topN)
 	return records[:topN]
 }

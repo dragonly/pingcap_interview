@@ -37,7 +37,7 @@ func GetTopNKeysInRange(minKey, maxKey, topN int64) {
 			MinKey: minKey,
 		},
 		TopN: topN,
-	})
+	}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if resp != nil {
 		for _, r := range resp.Records {
 			r.Data = r.Data[:10]

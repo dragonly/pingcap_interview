@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/dragonly/pingcap_interview/pkg/kv"
+	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("gen called")
-		kv.GenRecordsFiles()
+		storage.GenRecordsFiles()
 	},
 }
 

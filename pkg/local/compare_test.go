@@ -2,7 +2,7 @@ package local
 
 import (
 	"fmt"
-	"github.com/dragonly/pingcap_interview/pkg/kv"
+	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -25,18 +25,18 @@ func TestHeapResult(t *testing.T) {
 	n := viper.GetInt("local.data.record.num")
 	topN := viper.GetInt("local.data.record.topN")
 	// 由于算法会原地修改数据，需要各自 copy 一份输入数据
-	records := kv.GenRecords(n)
-	records1 := make([]kv.Record, n)
-	records2 := make([]kv.Record, n)
-	records3 := make([]kv.Record, n)
-	records4 := make([]kv.Record, n)
-	records5 := make([]kv.Record, n)
+	records := storage.GenRecords(n)
+	records1 := make([]storage.Record, n)
+	records2 := make([]storage.Record, n)
+	records3 := make([]storage.Record, n)
+	records4 := make([]storage.Record, n)
+	records5 := make([]storage.Record, n)
 	//records6 := make([]kv.Record, n)
-	kv.CopyRecords(records1, records)
-	kv.CopyRecords(records2, records)
-	kv.CopyRecords(records3, records)
-	kv.CopyRecords(records4, records)
-	kv.CopyRecords(records5, records)
+	storage.CopyRecords(records1, records)
+	storage.CopyRecords(records2, records)
+	storage.CopyRecords(records3, records)
+	storage.CopyRecords(records4, records)
+	storage.CopyRecords(records5, records)
 	//kv.CopyRecords(records6, records)
 	result1 := GetTopNBaseline(records1, topN)
 	result2 := GetTopNMaxHeap(records2, topN)
@@ -44,11 +44,11 @@ func TestHeapResult(t *testing.T) {
 	result4 := GetTopNParallel(records4, topN, GetTopNBaseline)
 	result5 := GetTopNParallel(records5, topN, GetTopNMaxHeap)
 	//result6 := GetTopNParallel(records5, topN, GetTopNQuickSelect)
-	sort.Sort(kv.SortByRecordKey(result1))
-	sort.Sort(kv.SortByRecordKey(result2))
-	sort.Sort(kv.SortByRecordKey(result3))
-	sort.Sort(kv.SortByRecordKey(result4))
-	sort.Sort(kv.SortByRecordKey(result5))
+	sort.Sort(storage.SortByRecordKey(result1))
+	sort.Sort(storage.SortByRecordKey(result2))
+	sort.Sort(storage.SortByRecordKey(result3))
+	sort.Sort(storage.SortByRecordKey(result4))
+	sort.Sort(storage.SortByRecordKey(result5))
 	//sort.Sort(kv.SortByRecordKey(result6))
 	if !reflect.DeepEqual(result1, result2) {
 		t.Errorf("single core heap method returns wrong results")
@@ -70,7 +70,7 @@ func TestHeapResult(t *testing.T) {
 func BenchmarkLocal(b *testing.B) {
 	n := viper.GetInt("local.data.record.num")
 	topN := viper.GetInt("local.data.record.topN")
-	records := kv.GenRecords(n)
+	records := storage.GenRecords(n)
 	b.ResetTimer()
 	b.Run("BaselineSingle", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {

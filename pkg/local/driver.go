@@ -2,7 +2,7 @@ package local
 
 import (
 	"fmt"
-	"github.com/dragonly/pingcap_interview/pkg/kv"
+	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"sort"
@@ -16,18 +16,18 @@ func Run() {
 		Int("n", n).
 		Int("topN", topN).
 		Msg("local algorithm test")
-	records := kv.GenRecords(n)
-	records1 := make([]kv.Record, n)
-	records2 := make([]kv.Record, n)
-	records3 := make([]kv.Record, n)
-	records4 := make([]kv.Record, n)
-	records5 := make([]kv.Record, n)
+	records := storage.GenRecords(n)
+	records1 := make([]storage.Record, n)
+	records2 := make([]storage.Record, n)
+	records3 := make([]storage.Record, n)
+	records4 := make([]storage.Record, n)
+	records5 := make([]storage.Record, n)
 	//records6 := make([]kv.Record, n)
-	kv.CopyRecords(records1, records)
-	kv.CopyRecords(records2, records)
-	kv.CopyRecords(records3, records)
-	kv.CopyRecords(records4, records)
-	kv.CopyRecords(records5, records)
+	storage.CopyRecords(records1, records)
+	storage.CopyRecords(records2, records)
+	storage.CopyRecords(records3, records)
+	storage.CopyRecords(records4, records)
+	storage.CopyRecords(records5, records)
 	//kv.CopyRecords(records6, records)
 
 	//store := kv.Store{Records: records}
@@ -37,11 +37,11 @@ func Run() {
 	result4 := GetTopNParallel(records4, topN, GetTopNBaseline)
 	result5 := GetTopNParallel(records5, topN, GetTopNMaxHeap)
 	//result6 := GetTopNParallel(records5, topN, GetTopNQuickSelect)
-	sort.Sort(kv.SortByRecordKey(result1))
-	sort.Sort(kv.SortByRecordKey(result2))
-	sort.Sort(kv.SortByRecordKey(result3))
-	sort.Sort(kv.SortByRecordKey(result4))
-	sort.Sort(kv.SortByRecordKey(result5))
+	sort.Sort(storage.SortByRecordKey(result1))
+	sort.Sort(storage.SortByRecordKey(result2))
+	sort.Sort(storage.SortByRecordKey(result3))
+	sort.Sort(storage.SortByRecordKey(result4))
+	sort.Sort(storage.SortByRecordKey(result5))
 	//sort.Sort(kv.SortByRecordKey(result6))
 	fmt.Printf("result1:\n%v\n", result1)
 	fmt.Printf("result2:\n%v\n", result2)

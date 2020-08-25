@@ -1,5 +1,5 @@
 package local
 
-import "github.com/dragonly/pingcap_interview/pkg/kv"
+import "github.com/dragonly/pingcap_interview/pkg/storage"
 
-type TopNSolver func(records []kv.Record, topN int) []kv.Record
+type TopNSolver func(records []storage.Record, topN int) []storage.Record

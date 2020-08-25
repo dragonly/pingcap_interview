@@ -1,4 +1,4 @@
-package kv
+package storage
 
 type Record struct {
 	Key  int64    // 主键，排序字段
