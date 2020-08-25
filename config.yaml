@@ -1,7 +1,7 @@
 cluster:
   data:
     record:
-      maxKey: 4611686018427387904
+      maxKey: 4611686018427387904  # math.MaxInt64
       dataSizeMin: 1024
       dataSizeMax: 102400
     file:
@@ -11,15 +11,15 @@ cluster:
   mapper:
     listen:
       addresses:
-      - :8000
-      - :8001
-      - :8002
+        - :8000
+        - :8001
+        - :8002
   master:
     dial:
       addresses:
-      - localhost:8000
-      - localhost:8001
-      - localhost:8002
+        - localhost:8000
+        - localhost:8001
+        - localhost:8002
 local:
   data:
     record:

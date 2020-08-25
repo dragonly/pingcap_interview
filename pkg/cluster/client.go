@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -9,42 +10,68 @@ import (
 )
 
 func GetTopNKeysInRange(minKey, maxKey, topN int64) {
-	address := viper.GetStringSlice("cluster.master.dial.addresses")[0]
+	// 获取计算任务所需参数
+	addresses := viper.GetStringSlice("cluster.master.dial.addresses")
 	filename := viper.GetString("cluster.data.file.path")
+	blockNum := viper.GetInt("cluster.data.file.blockNum")
 	log.Info().
-		Str("address", address).
+		Strs("addresses", addresses).
 		Str("data block filename", filename).
 		Msg("run GetTopNKeysInRange")
 
-	ctxDial, cancelDial := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancelDial()
-	conn, err := grpc.DialContext(ctxDial, address, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatal().Msgf("grpc.Dial: %v", err)
+	// 连接所有计算节点
+	var clients []TopNClient
+	for _, addr := range addresses {
+		ctxDial, cancelDial := context.WithTimeout(context.Background(), time.Second)
+		//goland:noinspection GoDeferInLoop
+		defer cancelDial()
+		conn, err := grpc.DialContext(ctxDial, addr, grpc.WithInsecure(), grpc.WithBlock())
+		if err != nil {
+			log.Error().Msgf("grpc.Dial failed for address %s: %v", addr, err)
+			continue
+		}
+		//goland:noinspection GoDeferInLoop
+		defer conn.Close()
+		clients = append(clients, NewTopNClient(conn))
+		log.Info().Msgf("client inialized for %s", addr)
 	}
-	defer conn.Close()
-	client := NewTopNClient(conn)
+	if len(clients) == 0 {
+		log.Fatal().Msg("no mapper service available")
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	resp, err := client.TopNInBlock(ctx, &TopNInBlockRequest{
-		DataBlock: &DataBlock{
-			Filename:   filename,
-			BlockIndex: 0,
-		},
-		KeyRange: &KeyRange{
-			MaxKey: maxKey,
-			MinKey: minKey,
-		},
-		TopN: topN,
-	}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
-	if resp != nil {
-		for _, r := range resp.Records {
-			r.Data = r.Data[:10]
+	// 构建计算任务列表
+	var jobs []Job
+	for i := 0; i < blockNum; i++ {
+		job := Job{
+			ID: i,
+			Request: &TopNInBlockRequest{
+				DataBlock: &DataBlock{
+					Filename:   filename,
+					BlockIndex: 0,
+				},
+				KeyRange: &KeyRange{
+					MaxKey: maxKey,
+					MinKey: minKey,
+				},
+				TopN: topN,
+			},
+		}
+		jobs = append(jobs, job)
+	}
+
+	// 调度计算任务
+	dispatcher := NewDispatcher(clients)
+	for _, job := range jobs {
+		dispatcher.JobChan <- job
+	}
+
+	// 获取分块任务 topN，合并最终结果
+	var pRecords []*Record
+	for i := 0; i < len(jobs); i++ {
+		result := <-dispatcher.JobResultChan
+		for _, pRecord := range result.Response.Records {
+			pRecords = append(pRecords, pRecord)
 		}
 	}
-	log.Info().Interface("response", resp).Msg("receive from mapper")
-	if err != nil {
-		log.Fatal().Msgf("client.TopNInBlock error: %v", err)
-	}
+	fmt.Println(pRecords)
 }
