@@ -5,6 +5,14 @@ type Record struct {
 	Data []byte // 数据
 }
 
+func CopyRecords(dst, src []Record) {
+	for i, _ := range src {
+		dst[i].Key = src[i].Key
+		dst[i].Data = make([]byte, len(src[i].Data))
+		copy(dst[i].Data, src[i].Data)
+	}
+}
+
 func (r *Record) Assign(r1 Record) {
 	(*r).Key = r1.Key
 	copy((*r).Data, r1.Data)

@@ -3,7 +3,9 @@ package kv
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -43,7 +45,7 @@ func (g *RecordGenerator) Generate() Record {
 type FileBlockWriter struct {
 	DataFilenameBase string // data 文件名，后缀会添加 meta 或 block index
 	BlockSize        int    // 文件分块大小，单位 byte
-	MaxBlockNum      int    // 最大块数
+	BlockNum         int    // 最大块数
 
 	fData              *os.File // data 文件指针
 	fMeta              *os.File // metadata 文件指针
@@ -73,7 +75,7 @@ func (m *FileBlockWriter) rotateFiles() {
 		m.blockIndex++
 		m.dataFileBytesWrote = 0
 	}
-	if m.blockIndex < m.MaxBlockNum {
+	if m.blockIndex < m.BlockNum {
 		var err error
 		if m.fMeta, err = os.Create(fmt.Sprintf("%s.%d.meta", m.DataFilenameBase, m.blockIndex)); err != nil {
 			panic(err)
@@ -109,7 +111,7 @@ func (m *FileBlockWriter) write(record Record) bool {
 	if dataFileBytesRemaining >= 8 /*Key*/ +len(record.Data) { // 当前 block 还有容量
 		m.writeFiles(record)
 		return true
-	} else if m.blockIndex < m.MaxBlockNum-1 { // 还有新 block 容量
+	} else if m.blockIndex < m.BlockNum-1 { // 还有新 block 容量
 		log.Info().
 			Int("remaining bytes", dataFileBytesRemaining).
 			Int("data bytes", 8+len(record.Data)).
@@ -117,11 +119,12 @@ func (m *FileBlockWriter) write(record Record) bool {
 		m.rotateFiles()
 		m.writeFiles(record)
 		return true
-	} else { // MaxBlockNum 已经写满
+	} else { // BlockNum 已经写满
 		return false
 	}
 }
 
+// GenRecords 生成 Key 唯一且随机的包含 n 个 Record 的数组，data 数据随机
 func GenRecords(n int) []Record {
 	rGen := RecordGenerator{
 		MaxKey:      math.MaxInt64,
@@ -133,7 +136,7 @@ func GenRecords(n int) []Record {
 	existingKeys := make(map[int64]struct{}, 1024)
 	log.Debug().Msg("generating records")
 	for i := 0; i < n; i++ {
-		if i % 10000 == 0 {
+		if i%10000 == 0 {
 			log.Debug().Msgf("i=%d", i)
 		}
 		record := rGen.Generate()
@@ -166,16 +169,33 @@ func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []
 }
 
 func GenRecordsFiles() {
+	maxKey := viper.GetInt64("cluster.data.record.maxKey")
+	dataSizeMin := viper.GetInt("cluster.data.record.dataSizeMin")
+	dataSizeMax := viper.GetInt("cluster.data.record.dataSizeMax")
+
+	dataFilenameBase := viper.GetString("cluster.data.file.path")
+	blockSize := viper.GetInt("cluster.data.file.blockSize")
+	blockNum := viper.GetInt("cluster.data.file.blockNum")
+	log.Info().
+		Dict("record generator", zerolog.Dict().
+			Int64("maxKey", maxKey).
+			Int("dataSizeMin", dataSizeMin).
+			Int("dataSizeMax", dataSizeMax)).
+		Dict("file writer", zerolog.Dict().
+			Str("dataFilenameBase", dataFilenameBase).
+			Int("blockSize", blockSize).
+			Int("blockNum", blockNum)).
+		Msg("generating records files with parameters")
 	rGen := RecordGenerator{
-		MaxKey:      math.MaxInt64,
-		DataSizeMin: 1 * 1024,
-		DataSizeMax: 100 * 1024,
+		MaxKey:      maxKey,
+		DataSizeMin: dataSizeMin,
+		DataSizeMax: dataSizeMax,
 	}
 	rGen.Init()
 	fbMgr := FileBlockWriter{
-		DataFilenameBase: "data/test",
-		BlockSize:        64 * 1024 * 1024,
-		MaxBlockNum:      3,
+		DataFilenameBase: dataFilenameBase,
+		BlockSize:        blockSize,
+		BlockNum:         blockNum,
 	}
 	genRecordsFiles(rGen, fbMgr, false)
 }

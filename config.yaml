@@ -1,0 +1,21 @@
+cluster:
+  data:
+    record:
+      maxKey: 4611686018427387904
+      dataSizeMin: 1024
+      dataSizeMax: 102400
+    file:
+      path: data/test
+      blockSize: 67108864
+      blockNum: 3
+  mapper:
+    listen:
+      address: :2333
+  master:
+    dial:
+      address: localhost:2333
+local:
+  data:
+    record:
+      num: 10000
+      topN: 10

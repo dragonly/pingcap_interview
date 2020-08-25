@@ -83,9 +83,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".pingcap_interview" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".pingcap_interview")
+		viper.AddConfigPath(".")
+		viper.SetConfigName("config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

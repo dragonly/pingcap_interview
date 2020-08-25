@@ -3,18 +3,19 @@ package local
 import (
 	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/kv"
-	"math"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"sort"
 )
 
-const (
-	n    = 10000
-	topN = 10
-	maxKey = math.MaxInt64
-	//maxKey = n * 2
-)
-
 func Run() {
+	n := viper.GetInt("local.data.record.num")
+	topN := viper.GetInt("local.data.record.topN")
+	log.Info().
+		//Interface("local.data.record", viper.GetStringMap("local.data.record")).
+		Int("n", n).
+		Int("topN", topN).
+		Msg("local algorithm test")
 	records := kv.GenRecords(n)
 	records1 := make([]kv.Record, n)
 	records2 := make([]kv.Record, n)
@@ -22,12 +23,12 @@ func Run() {
 	records4 := make([]kv.Record, n)
 	records5 := make([]kv.Record, n)
 	//records6 := make([]kv.Record, n)
-	copyRecords(records1, records)
-	copyRecords(records2, records)
-	copyRecords(records3, records)
-	copyRecords(records4, records)
-	copyRecords(records5, records)
-	//copyRecords(records6, records)
+	kv.CopyRecords(records1, records)
+	kv.CopyRecords(records2, records)
+	kv.CopyRecords(records3, records)
+	kv.CopyRecords(records4, records)
+	kv.CopyRecords(records5, records)
+	//kv.CopyRecords(records6, records)
 
 	//store := kv.Store{Records: records}
 	result1 := GetTopNBaseline(records1, topN)
