@@ -65,7 +65,7 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
 	log.Logger = log.With().Caller().Logger()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }

@@ -52,6 +52,7 @@ the calculation is done on each mapper for blocks of data on shared storage`,
 var (
 	pMinKey *int64
 	pMaxKey *int64
+	topN    *int64
 )
 
 var getTopNKeysInRangeCmd = &cobra.Command{
@@ -62,7 +63,7 @@ var getTopNKeysInRangeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("cluster getTopNKeysInRangeCmd called")
 		fmt.Printf("minKey=%d, maxKey=%d\n", *pMinKey, *pMaxKey)
-		cluster.GetTopNKeysInRange(*pMinKey, *pMaxKey)
+		cluster.GetTopNKeysInRange(*pMinKey, *pMaxKey, *topN)
 	},
 }
 
@@ -74,6 +75,7 @@ func init() {
 
 	pMinKey = getTopNKeysInRangeCmd.Flags().Int64("minKey", -1, "min key, inclusive")
 	pMaxKey = getTopNKeysInRangeCmd.Flags().Int64("maxKey", -1, "max key, inclusive")
+	topN = getTopNKeysInRangeCmd.Flags().Int64("topN", -1, "topN keys number")
 
 	// Here you will define your flags and configuration settings.
 
