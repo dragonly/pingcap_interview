@@ -16,6 +16,7 @@ type server struct {
 func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (*TopNInBlockResponse, error) {
 	log.Info().Interface("request", request).Msg("received request")
 	records := kv.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
+
 	pRecords := make([]*Record, len(records))
 	for i, r := range records {
 		pRecords[i] = new(Record)

@@ -1,9 +1,11 @@
 package local
 
 import (
+	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/kv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"reflect"
 	"sort"
 	"testing"
@@ -12,9 +14,16 @@ import (
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.With().Caller().Logger()
+	viper.AddConfigPath(".")
+	viper.SetConfigName("config")
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
 }
 
 func TestHeapResult(t *testing.T) {
+	n := viper.GetInt("local.data.record.num")
+	topN := viper.GetInt("local.data.record.topN")
 	// 由于算法会原地修改数据，需要各自 copy 一份输入数据
 	records := kv.GenRecords(n)
 	records1 := make([]kv.Record, n)
@@ -59,6 +68,8 @@ func TestHeapResult(t *testing.T) {
 }
 
 func BenchmarkLocal(b *testing.B) {
+	n := viper.GetInt("local.data.record.num")
+	topN := viper.GetInt("local.data.record.topN")
 	records := kv.GenRecords(n)
 	b.ResetTimer()
 	b.Run("BaselineSingle", func(b *testing.B) {
