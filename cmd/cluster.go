@@ -41,7 +41,7 @@ var startMapperCmd = &cobra.Command{
 	Use:   "startMapper",
 	Short: "启动 mapper 服务",
 	Long: `start mapper server
-mapper will listen on port 2333 to receive get-top-n request, with key range [min_k, max_k]
+mapper will listen on tcp port to receive get-top-n grpc request, with key range [min_k, max_k]
 the calculation is done on each mapper for blocks of data on shared storage`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("cluster startMapperCmd called")

@@ -9,7 +9,7 @@ import (
 )
 
 func GetTopNKeysInRange(minKey, maxKey, topN int64) {
-	address := viper.GetString("cluster.master.dial.address")
+	address := viper.GetStringSlice("cluster.master.dial.addresses")[0]
 	filename := viper.GetString("cluster.data.file.path")
 	log.Info().
 		Str("address", address).

@@ -27,6 +27,7 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	//deadline, _ := ctx.Deadline()
 	//fmt.Println(time.Now().Sub(deadline))
 	t0 := time.Now()
+	// TODO: optimization: 先只加载 key，计算出结果后再读取响应的 topN 返回结果
 	records := storage.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
 	t1 := time.Now()
 	topNRecords := local.GetTopNMaxHeap(records, int(request.TopN))
@@ -53,7 +54,7 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 }
 
 func StartServer() {
-	address := viper.GetString("cluster.mapper.listen.address")
+	address := viper.GetStringSlice("cluster.mapper.listen.addresses")[0]
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatal().Msgf("failed to listen: %v", err)

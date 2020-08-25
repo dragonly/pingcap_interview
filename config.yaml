@@ -10,10 +10,16 @@ cluster:
       blockNum: 3
   mapper:
     listen:
-      address: :2333
+      addresses:
+      - :8000
+      - :8001
+      - :8002
   master:
     dial:
-      address: localhost:2333
+      addresses:
+      - localhost:8000
+      - localhost:8001
+      - localhost:8002
 local:
   data:
     record:
