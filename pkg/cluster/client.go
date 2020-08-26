@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/local"
 	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog/log"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-func GetTopNKeysInRange(minKey, maxKey int64, topN int) {
+func GetTopNKeysInRangeBlocked(minKey, maxKey int64, topN int) {
 	// 获取计算任务所需参数
 	addresses := viper.GetStringSlice("cluster.master.dial.addresses")
 	filename := viper.GetString("cluster.data.file.path")
@@ -18,7 +19,7 @@ func GetTopNKeysInRange(minKey, maxKey int64, topN int) {
 	log.Info().
 		Strs("addresses", addresses).
 		Str("data block filename", filename).
-		Msg("run GetTopNKeysInRange")
+		Msg("run GetTopNKeysInRangeBlocked")
 
 	// 连接所有计算节点
 	log.Info().Msg("connecting calculating nodes")
@@ -92,4 +93,40 @@ func GetTopNKeysInRange(minKey, maxKey int64, topN int) {
 	}
 
 	log.Info().Interface("keys", topNRecords).Msgf("got top n records")
+}
+
+func GetTopNKeysInRangeAll(minKey, maxKey int64, topN int) {
+	// 获取计算任务所需参数
+	addresses := viper.GetStringSlice("cluster.master.dial.addresses")
+	filename := viper.GetString("cluster.data.file.path")
+	log.Info().
+		Strs("addresses", addresses).
+		Str("data block filename", filename).
+		Msg("run GetTopNKeysInRangeAll")
+
+	// 连接第一个计算节点
+	log.Info().Msg("connecting calculating nodes")
+	addr := addresses[0]
+	ctxDial, cancelDial := context.WithTimeout(context.Background(), time.Second)
+	defer cancelDial()
+	conn, err := grpc.DialContext(ctxDial, addr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatal().Msgf("grpc.Dial failed for address %s: %v", addr, err)
+	}
+	defer conn.Close()
+	client := NewTopNClient(conn)
+	log.Info().Msgf("client inialized for %s", addr)
+
+	req := &TopNInBlockRequest{
+		DataBlock: &DataBlock{
+			Filename: filename,
+		},
+		KeyRange: &KeyRange{
+			MaxKey: maxKey,
+			MinKey: minKey,
+		},
+		TopN: int64(topN),
+	}
+	resp, err := client.TopNAll(context.Background(), req, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	fmt.Println(resp)
 }

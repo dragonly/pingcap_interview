@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/local"
 	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog"
@@ -11,6 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net"
+	"sort"
 	"time"
 )
 
@@ -22,12 +24,12 @@ type server struct {
 func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (*TopNInBlockResponse, error) {
 	log.Info().Interface("request", request).Msg("TopNInBlock received request")
 	topN := request.TopN
-	//minKey := request.KeyRange.MinKey
-	//maxKey := request.KeyRange.MaxKey
+	minKey := request.KeyRange.MinKey
+	maxKey := request.KeyRange.MaxKey
 	if topN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
 	}
-	// TODO: 可以遵守一下 deadline，避免浪费计算资源
+
 	deadline, hasDeadline := ctx.Deadline()
 	log.Debug().Msgf("time remains for request: %d", deadline.Sub(time.Now()))
 	t0 := time.Now()
@@ -37,7 +39,7 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 		return nil, status.Errorf(codes.DeadlineExceeded, "deadline exceeded, skip calculation")
 	}
 	t1 := time.Now()
-	topNRecords := local.GetTopNMaxHeap(records, int(topN))
+	topNRecords := local.GetTopNMaxHeapWithKeyRange(records, int(topN), minKey, maxKey)
 	t2 := time.Now()
 	pRecords := make([]*Record, len(topNRecords))
 	for i, r := range topNRecords {
@@ -65,19 +67,35 @@ func (s *server) TopNAll(ctx context.Context, request *TopNInBlockRequest) (*Top
 	log.Info().Interface("request", request).Msg("TopNAll received request")
 	blockNum := viper.GetInt("cluster.data.file.blockNum")
 	topN := request.TopN
+	minKey := request.KeyRange.MinKey
+	maxKey := request.KeyRange.MaxKey
+
 	if topN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
 	}
 
 	var topNRecords []storage.Record
 	for i := 0; i < blockNum; i++ {
-		records := storage.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
-		tmp := local.GetTopNMaxHeap(records, int(topN))
+		t0 := time.Now()
+		records := storage.ReadRecordsFile(request.DataBlock.Filename, int64(i))
+		t1 := time.Now()
+		tmp := local.GetTopNMaxHeapWithKeyRange(records, int(topN), minKey, maxKey)
+		t2 := time.Now()
+		log.Info().
+			Int("records in block", len(records)).
+			Int("topN records in block", len(topNRecords)).
+			Dict("time_us", zerolog.Dict().
+				Int64("kv.ReadRecordsFile()", t1.Sub(t0).Microseconds()).
+				Int64("local.GetTopNMaxHeap()", t2.Sub(t1).Microseconds())).
+			Msg("return topN records in block")
 		for _, r := range tmp {
 			topNRecords = append(topNRecords, r)
 		}
 	}
 	topNRecords = local.GetTopNMaxHeap(topNRecords, int(topN))
+	sort.Sort(storage.SortByRecordKey(topNRecords))
+	fmt.Println(topNRecords)
+
 	pRecords := make([]*Record, len(topNRecords))
 	for i, r := range topNRecords {
 		pRecords[i] = new(Record)

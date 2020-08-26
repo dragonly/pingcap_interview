@@ -37,7 +37,6 @@ func DoRequest(client TopNClient, req *TopNInBlockRequest) (*TopNInBlockResponse
 	resp, err := client.TopNInBlock(ctx, req, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if resp != nil {
 		for _, r := range resp.Records {
-			r.Data = r.Data[:10]
 			r.Data = nil
 		}
 	}
