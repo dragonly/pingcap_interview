@@ -6,16 +6,15 @@ type Record struct {
 }
 
 func CopyRecords(dst, src []Record) {
-	for i, _ := range src {
-		dst[i].Key = src[i].Key
-		dst[i].Data = make([]byte, len(src[i].Data))
-		copy(dst[i].Data, src[i].Data)
+	for i, r := range src {
+		dst[i].Assign(r)
 	}
 }
 
 func (r *Record) Assign(r1 Record) {
-	(*r).Key = r1.Key
-	copy((*r).Data, r1.Data)
+	r.Key = r1.Key
+	r.Data = make([]byte, len(r1.Data))
+	copy(r.Data, r1.Data)
 }
 
 type SortByRecordKey []Record

@@ -50,7 +50,7 @@ func GetTopNParallel(records []storage.Record, topN int, topNFn TopNSolver) []st
 	reducedTopN := make([]storage.Record, reducedLen)
 	dstStep := min(topN, len(chunks[0]))
 	for i, chunk := range chunks {
-		copy(reducedTopN[i*dstStep:], chunk[:min(topN, len(chunk))])
+		storage.CopyRecords(reducedTopN[i*dstStep:], chunk[:min(topN, len(chunk))])
 	}
 	return topNFn(reducedTopN, topN)
 }

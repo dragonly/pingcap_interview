@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"math"
 	"math/rand"
 	"os"
 	"time"
@@ -18,6 +17,7 @@ type RecordGenerator struct {
 
 func (g *RecordGenerator) Init() {
 	rand.Seed(time.Now().Unix())
+	//rand.Seed(0)
 }
 
 func (g *RecordGenerator) Generate() Record {
@@ -120,9 +120,9 @@ func (m *FileBlockWriter) write(record Record) bool {
 }
 
 // GenRecords 生成 Key 唯一且随机的包含 n 个 Record 的数组，data 数据随机
-func GenRecords(n int) []Record {
+func GenRecords(n int, maxKey int64) []Record {
 	rGen := RecordGenerator{
-		MaxKey:      math.MaxInt64,
+		MaxKey:      maxKey,
 		DataSizeMin: 0,
 		DataSizeMax: 0,
 	}
@@ -130,15 +130,17 @@ func GenRecords(n int) []Record {
 	var records []Record
 	existingKeys := make(map[int64]struct{}, 1024)
 	log.Debug().Msg("generating records")
-	for i := 0; i < n; i++ {
-		if i%10000 == 0 {
-			log.Debug().Msgf("i=%d", i)
-		}
+	for {
 		record := rGen.Generate()
 		if _, exist := existingKeys[record.Key]; exist {
+			//fmt.Println(record.Key)
 			continue
 		}
+		existingKeys[record.Key] = struct{}{}
 		records = append(records, record)
+		if len(records) == n {
+			break
+		}
 	}
 	return records
 }

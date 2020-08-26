@@ -21,17 +21,23 @@ type server struct {
 // TopNInBlock 读取一个文件 block，计算其中的 topN，并通过 gRPC 返回结果
 func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (*TopNInBlockResponse, error) {
 	log.Info().Interface("request", request).Msg("TopNInBlock received request")
-	if request.TopN <= 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", request.TopN)
+	topN := request.TopN
+	//minKey := request.KeyRange.MinKey
+	//maxKey := request.KeyRange.MaxKey
+	if topN <= 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
 	}
 	// TODO: 可以遵守一下 deadline，避免浪费计算资源
-	//deadline, _ := ctx.Deadline()
-	//fmt.Println(time.Now().Sub(deadline))
+	deadline, hasDeadline := ctx.Deadline()
+	log.Debug().Msgf("time remains for request: %d", deadline.Sub(time.Now()))
 	t0 := time.Now()
 	// TODO: optimization: 先只加载 key，计算出结果后再读取响应的 topN 返回结果
 	records := storage.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
+	if hasDeadline && time.Now().Sub(deadline) > 0 {
+		return nil, status.Errorf(codes.DeadlineExceeded, "deadline exceeded, skip calculation")
+	}
 	t1 := time.Now()
-	topNRecords := local.GetTopNMaxHeap(records, int(request.TopN))
+	topNRecords := local.GetTopNMaxHeap(records, int(topN))
 	t2 := time.Now()
 	pRecords := make([]*Record, len(topNRecords))
 	for i, r := range topNRecords {
@@ -84,8 +90,8 @@ func (s *server) TopNAll(ctx context.Context, request *TopNInBlockRequest) (*Top
 	}, nil
 }
 
-func StartServer() {
-	address := viper.GetStringSlice("cluster.mapper.listen.addresses")[0]
+func StartServer(serverIndex int) {
+	address := viper.GetStringSlice("cluster.mapper.listen.addresses")[serverIndex]
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatal().Msgf("failed to listen: %v", err)

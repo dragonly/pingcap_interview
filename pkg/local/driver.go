@@ -5,6 +5,7 @@ import (
 	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"math"
 	"sort"
 )
 
@@ -16,7 +17,7 @@ func Run() {
 		Int("n", n).
 		Int("topN", topN).
 		Msg("local algorithm test")
-	records := storage.GenRecords(n)
+	records := storage.GenRecords(n, math.MaxInt64)
 	records1 := make([]storage.Record, n)
 	records2 := make([]storage.Record, n)
 	records3 := make([]storage.Record, n)

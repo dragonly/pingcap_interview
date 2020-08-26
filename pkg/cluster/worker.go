@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"time"
 )
@@ -27,7 +28,11 @@ type Worker struct {
 }
 
 func DoRequest(client TopNClient, req *TopNInBlockRequest) (*TopNInBlockResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	timeoutMs := viper.GetInt("cluster.master.request.timeout")
+	log.Debug().Msgf("start DoRequest() with timeout=%dms", timeoutMs)
+	//fmt.Println(time.Duration(timeoutMs)*time.Millisecond)
+	//fmt.Println(30000*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutMs)*time.Millisecond)
 	defer cancel()
 	resp, err := client.TopNInBlock(ctx, req, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if resp != nil {
@@ -122,6 +127,7 @@ func (d *Dispatcher) Start() {
 				log.Debug().Int("id", job.ID).Int("channels", len(worker.JobChan)).Msg("dispatcher dispatched job")
 			case result := <-d.JobRescheduleChan:
 				if result.Error != nil { // 失败任务重试
+					// TODO: 处理 tcp 连接断开的情况，应该等待 gRPC 重连，可以在 Job 中加一段等待时间
 					log.Error().Int("id", result.Job.ID).Msg("dispatcher re-dispatch job")
 					d.JobChan <- result.Job
 				} else {

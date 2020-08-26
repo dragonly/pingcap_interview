@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"math"
 	"reflect"
 	"sort"
 	"testing"
@@ -22,10 +23,10 @@ func init() {
 }
 
 func TestHeapResult(t *testing.T) {
-	n := viper.GetInt("local.data.record.num")
-	topN := viper.GetInt("local.data.record.topN")
+	n := 10
+	topN := 10000
 	// 由于算法会原地修改数据，需要各自 copy 一份输入数据
-	records := storage.GenRecords(n)
+	records := storage.GenRecords(n, math.MaxInt64)
 	records1 := make([]storage.Record, n)
 	records2 := make([]storage.Record, n)
 	records3 := make([]storage.Record, n)
@@ -68,9 +69,9 @@ func TestHeapResult(t *testing.T) {
 }
 
 func BenchmarkLocal(b *testing.B) {
-	n := viper.GetInt("local.data.record.num")
-	topN := viper.GetInt("local.data.record.topN")
-	records := storage.GenRecords(n)
+	n := 10
+	topN := 10000
+	records := storage.GenRecords(n, math.MaxInt64)
 	b.ResetTimer()
 	b.Run("BaselineSingle", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {

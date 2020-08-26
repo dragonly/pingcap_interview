@@ -55,6 +55,7 @@ func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []
 		if _, exist := existingKeys[record.Key]; exist {
 			continue
 		}
+		existingKeys[record.Key] = struct{}{}
 		if !fbMgr.write(record) {
 			break
 		}
