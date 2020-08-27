@@ -82,7 +82,11 @@ go test -v -bench=. -count=1 github.com/dragonly/pingcap_interview/pkg/local
 ```
 
 #### 性能测试结果
-TODO
+固定 topN 数量为 N=10，让 record 数量从 1000 开始，以乘以 2 的方式指数增长到 1024000，分别测试单核与多核版本算法性能，并使用 `benchmark_local.py` 脚本画图，得到 `benchmark_local.png` 所示的折线图。
+
+![benchmark_local](benchmark_local.png)
+
+图中以 Single 结尾的折线代表单核算法，以 Multi 结尾的代表多核算法。可以看出在当前实现下，效果最好的是基于最大堆的算法，并且在 record 数量大于 32000 之后，多核带来的 overhead 才逐渐被并行带来的加速抵消掉，显示出多核性能优势。由于时间关系和对 golang 的熟悉程度限制，本项目没有对多核情况进行更加深入的优化。
 
 ### 2. 分布式情况
 分布式情况的集成测试环境使用 `docker-compose.yaml` 进行封装，统一测试环境，使测试过程更容易复现。
