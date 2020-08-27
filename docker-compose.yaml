@@ -2,15 +2,31 @@ version: '3.0'
 services:
   mapper1:
     build: .
-    command: ./topn cluster startMapper --config config.yaml
+    command: ./topn cluster startMapper --serverIndex 0 --debug
     ports:
       - '8000:8000'
     volumes:
       - ./data:/app/data
     network_mode: host
+  mapper2:
+    build: .
+    command: ./topn cluster startMapper --serverIndex 1 --debug
+    ports:
+      - '8001:8001'
+    volumes:
+      - ./data:/app/data
+    network_mode: host
+  mapper3:
+    build: .
+    command: ./topn cluster startMapper --serverIndex 2 --debug
+    ports:
+      - '8002:8002'
+    volumes:
+      - ./data:/app/data
+    network_mode: host
   master:
     build: .
-    command: ./topn cluster getTopNKeysInRange --minKey 1 --maxKey 10 --topN 10 --debug
+    command: ./topn cluster getTopNKeysInRange --minKey 1 --maxKey 9223372036854775807 --topN 10 --debug
     depends_on:
       - mapper1
     network_mode: host
