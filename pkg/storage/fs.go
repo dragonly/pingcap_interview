@@ -44,7 +44,6 @@ func ReadRecordsFile(dataFilenameBase string, blockIndex int64) []Record {
 	return records
 }
 
-
 // genRecordsFiles 生成分块的 record 文件，为了简化处理，暂时将跨当前文件 block 边缘的 record 放入下一个 block，
 // 并将前一个 block 结尾 pad 成 0 字节
 func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []Record {
@@ -66,7 +65,7 @@ func genRecordsFiles(rGen RecordGenerator, fbMgr FileBlockWriter, debug bool) []
 	return records
 }
 
-func GenRecordsFiles() {
+func GenRecordsFiles(startBlockIndex int) {
 	maxKey := viper.GetInt64("cluster.data.record.maxKey")
 	dataSizeMin := viper.GetInt("cluster.data.record.dataSizeMin")
 	dataSizeMax := viper.GetInt("cluster.data.record.dataSizeMax")
@@ -94,6 +93,7 @@ func GenRecordsFiles() {
 		DataFilenameBase: dataFilenameBase,
 		BlockSize:        blockSize,
 		BlockNum:         blockNum,
+		BlockIndex:       startBlockIndex,
 	}
 	genRecordsFiles(rGen, fbMgr, false)
 }

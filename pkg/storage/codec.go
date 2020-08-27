@@ -41,10 +41,10 @@ type FileBlockWriter struct {
 	DataFilenameBase string // data 文件名，后缀会添加 meta 或 block index
 	BlockSize        int    // 文件分块大小，单位 byte
 	BlockNum         int    // 最大块数
+	BlockIndex       int    // 当前 block
 
 	fData              *os.File // data 文件指针
 	fMeta              *os.File // metadata 文件指针
-	blockIndex         int      // 当前 block
 	dataFileBytesWrote int      // 已经写入 data 文件的 byte 数
 }
 
@@ -67,15 +67,15 @@ func (m *FileBlockWriter) rotateFiles() {
 		if err := m.fData.Close(); err != nil {
 			panic(err)
 		}
-		m.blockIndex++
+		m.BlockIndex++
 		m.dataFileBytesWrote = 0
 	}
-	if m.blockIndex < m.BlockNum {
+	if m.BlockIndex < m.BlockNum {
 		var err error
-		if m.fMeta, err = os.Create(fmt.Sprintf("%s.%d.meta", m.DataFilenameBase, m.blockIndex)); err != nil {
+		if m.fMeta, err = os.Create(fmt.Sprintf("%s.%d.meta", m.DataFilenameBase, m.BlockIndex)); err != nil {
 			panic(err)
 		}
-		if m.fData, err = os.Create(fmt.Sprintf("%s.%d.data", m.DataFilenameBase, m.blockIndex)); err != nil {
+		if m.fData, err = os.Create(fmt.Sprintf("%s.%d.data", m.DataFilenameBase, m.BlockIndex)); err != nil {
 			panic(err)
 		}
 	}
@@ -106,7 +106,7 @@ func (m *FileBlockWriter) write(record Record) bool {
 	if dataFileBytesRemaining >= 8 /*Key*/ +len(record.Data) { // 当前 block 还有容量
 		m.writeFiles(record)
 		return true
-	} else if m.blockIndex < m.BlockNum-1 { // 还有新 block 容量
+	} else if m.BlockIndex < m.BlockNum-1 { // 还有新 block 容量
 		log.Info().
 			Int("remaining bytes", dataFileBytesRemaining).
 			Int("data bytes", 8+len(record.Data)).

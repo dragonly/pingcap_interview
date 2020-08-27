@@ -21,6 +21,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	pStartBlockIndex *int
+)
+
 // genCmd represents the gen command
 var genCmd = &cobra.Command{
 	Use:   "gen",
@@ -33,12 +37,14 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("gen called")
-		storage.GenRecordsFiles()
+		storage.GenRecordsFiles(*pStartBlockIndex)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(genCmd)
+
+	pStartBlockIndex = genCmd.Flags().Int("startBlockIndex", 0, "starting block index")
 
 	// Here you will define your flags and configuration settings.
 
