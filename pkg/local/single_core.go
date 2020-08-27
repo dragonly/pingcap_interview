@@ -15,6 +15,15 @@ func GetTopNBaseline(records []storage.Record, topN int) []storage.Record {
 	return records[:topN]
 }
 
+// GetTopNQuickSelect 基于 quickSort 算法改进，复杂度为
+func GetTopNQuickSelect(records []storage.Record, topN int) []storage.Record {
+	if len(records) < topN {
+		return records
+	}
+	QuickSelect(storage.SortByRecordKey(records), topN)
+	return records[:topN]
+}
+
 // GetTopNMaxHeap 在 records 的前 min(TopN, len(records)) 范围内原地建堆，因此会导致传入数据发生变化
 func GetTopNMaxHeap(records []storage.Record, topN int) []storage.Record {
 	if len(records) < topN {
@@ -61,12 +70,4 @@ func GetTopNMaxHeapWithKeyRange(records []storage.Record, topN int, minKey, maxK
 		}
 	}
 	return h
-}
-
-func GetTopNQuickSelect(records []storage.Record, topN int) []storage.Record {
-	if len(records) < topN {
-		return records
-	}
-	QuickSelect(storage.SortByRecordKey(records), topN)
-	return records[:topN]
 }

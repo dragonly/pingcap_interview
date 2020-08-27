@@ -23,8 +23,8 @@ func init() {
 }
 
 func TestHeapResult(t *testing.T) {
-	n := 10
-	topN := 10000
+	n := 1000000
+	topN := 10
 	// 由于算法会原地修改数据，需要各自 copy 一份输入数据
 	records := storage.GenRecords(n, math.MaxInt64)
 	records1 := make([]storage.Record, n)
@@ -69,8 +69,8 @@ func TestHeapResult(t *testing.T) {
 }
 
 func BenchmarkLocal(b *testing.B) {
-	n := 10
-	topN := 10000
+	n := 1000000
+	topN := 10
 	records := storage.GenRecords(n, math.MaxInt64)
 	b.ResetTimer()
 	b.Run("BaselineSingle", func(b *testing.B) {

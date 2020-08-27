@@ -10,7 +10,7 @@ import (
 func split(records []storage.Record) [][]storage.Record {
 	// TODO: 优化数据量小的情况，或许可以做个自适应
 	workers := runtime.NumCPU() * 2
-	log.Info().Msgf("cpu workers: %d", workers)
+	log.Debug().Msgf("cpu workers: %d", workers)
 	chunkSize := len(records) / workers
 	ret := make([][]storage.Record, workers)
 	for i := 0; i < workers-1; i++ {

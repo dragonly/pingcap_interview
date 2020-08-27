@@ -7,6 +7,18 @@ import (
 	"testing"
 )
 
+func TestGetTopNBaseline(t *testing.T) {
+
+}
+
+func TestGetTopNMaxHeap(t *testing.T) {
+
+}
+
+func TestGetTopNQuickSelect(t *testing.T) {
+
+}
+
 func TestGetTopNMaxHeapWithKeyRange(t *testing.T) {
 	var records []storage.Record
 	for i:= 0; i < 20; i++ {

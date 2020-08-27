@@ -1,29 +1,31 @@
 cluster:
   data:
     record:
-      maxKey: 4611686018427387904  # math.MaxInt64
-      dataSizeMin: 1024  # 1KB
-      dataSizeMax: 10240  # 10KB
+      # 1<<63 - 1 == 9223372036854775807
+      maxKey: 9223372036854775807  # 生成 key 的最大值，由于 key 为主键不能重复，所以 maxKey 必须大于生成的 records 数
+      dataSizeMin: 1024  # Data 字段最小字节数
+      dataSizeMax: 10240  # Data 字段最大字节数
     file:
-      path: data/test
-      blockSize: 536870912  # 512MB
-      blockNum: 3
+      path: data/test  # 生成文件 block 的基础名称，即最后生成文件命名为 $path.$blockIndex.[meta|data]
+      # 536870912 == 512MB
+      blockSize: 536870912  # 每个文件 block 的字节数
+      blockNum: 2048  # 生成文件 block 数量
   mapper:
     listen:
-      addresses:
+      addresses:  # mapper gRPC 服务监听地址
         - :8000
         - :8001
         - :8002
   master:
     dial:
-      addresses:
+      addresses:  # master 连接 gRPC 服务地址
         - localhost:8000
         - localhost:8001
         - localhost:8002
     request:
-      timeout: 30000  # ms
+      timeout: 30000  # 请求超时时间，单位 ms
 local:
   data:
-    record:
-      num: 10000
-      topN: 10
+    record:  # 单机情况，内存生成测试 record 配置
+      num: 10000  # record 数量
+      topN: 10  # topN 数量
