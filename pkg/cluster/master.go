@@ -12,7 +12,7 @@ import (
 )
 
 // GetTopNKeysInRangeBlocked 计算当前 block 内的 topN
-func GetTopNKeysInRangeBlocked(minKey, maxKey int64, topN int) {
+func GetTopNKeysInRangeBlocked(minKey, maxKey int64, topN int, failRate float32) {
 	// 获取计算任务所需参数
 	addresses := viper.GetStringSlice("cluster.master.dial.addresses")
 	filename := viper.GetString("cluster.data.file.path")
@@ -57,7 +57,8 @@ func GetTopNKeysInRangeBlocked(minKey, maxKey int64, topN int) {
 					MaxKey: maxKey,
 					MinKey: minKey,
 				},
-				TopN: int64(topN),
+				TopN:     int64(topN),
+				FailRate: failRate,
 			},
 		}
 		jobs = append(jobs, job)

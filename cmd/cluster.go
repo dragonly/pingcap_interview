@@ -55,10 +55,11 @@ the calculation is done on each mapper for blocks of data on shared storage`,
 }
 
 var (
-	pMinKey   *int64
-	pMaxKey   *int64
-	topN      *int
-	oneMapper *bool
+	pMinKey    *int64
+	pMaxKey    *int64
+	topN       *int
+	pOneMapper *bool
+	pFailRate  *float32
 )
 
 var getTopNKeysInRangeCmd = &cobra.Command{
@@ -72,12 +73,12 @@ var getTopNKeysInRangeCmd = &cobra.Command{
 				Int64("minKey", *pMinKey).
 				Int64("maxKey", *pMaxKey).
 				Int("topN", *topN).
-				Bool("oneMapepr", *oneMapper)).
+				Bool("oneMapepr", *pOneMapper)).
 			Msg("cluster getTopNKeysInRangeCmd called")
-		if *oneMapper {
+		if *pOneMapper {
 			cluster.GetTopNKeysInRangeAll(*pMinKey, *pMaxKey, *topN)
 		} else {
-			cluster.GetTopNKeysInRangeBlocked(*pMinKey, *pMaxKey, *topN)
+			cluster.GetTopNKeysInRangeBlocked(*pMinKey, *pMaxKey, *topN, *pFailRate)
 		}
 	},
 }
@@ -91,7 +92,8 @@ func init() {
 	pMinKey = getTopNKeysInRangeCmd.Flags().Int64("minKey", -1, "min key, inclusive")
 	pMaxKey = getTopNKeysInRangeCmd.Flags().Int64("maxKey", -1, "max key, inclusive")
 	topN = getTopNKeysInRangeCmd.Flags().Int("topN", -1, "topN keys number")
-	oneMapper = getTopNKeysInRangeCmd.Flags().Bool("oneMapper", false, "call only one mapper to do all the job")
+	pOneMapper = getTopNKeysInRangeCmd.Flags().Bool("pOneMapper", false, "call only one mapper to do all the job")
+	pFailRate = getTopNKeysInRangeCmd.Flags().Float32("failRate", 0, "random failure injection rate")
 
 	serverIndex = startMapperCmd.Flags().Int("serverIndex", 0, "mapper server address index")
 }

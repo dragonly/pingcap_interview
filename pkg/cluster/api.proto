@@ -5,14 +5,15 @@ package mapper;
 option go_package = 'github.com/dragonly/pingcap_interview/pkg/cluster';
 
 service TopN {
-    rpc TopNInBlock (TopNInBlockRequest) returns (TopNInBlockResponse) {}
-    rpc TopNAll (TopNInBlockRequest) returns (TopNInBlockResponse) {}
+    rpc TopNInBlock (TopNInBlockRequest) returns (TopNInBlockResponse) {}  // 计算一个 block 数据块中 key 在 keyRange 范围内的 topN
+    rpc TopNAll (TopNInBlockRequest) returns (TopNInBlockResponse) {}  // 计算所有 block
 }
 
 message TopNInBlockRequest {
     DataBlock data_block = 1;
     KeyRange key_range = 2;
     int64 top_n = 3;
+    float fail_rate = 4;  // 失败注入率，用于测试失败任务重试
 }
 
 message KeyRange {

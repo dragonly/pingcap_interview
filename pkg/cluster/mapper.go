@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"math/rand"
 	"net"
 	_ "net/http/pprof"
 	"runtime"
@@ -29,6 +30,14 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	maxKey := request.KeyRange.MaxKey
 	blockIndex := request.DataBlock.BlockIndex
 	filename := request.DataBlock.Filename
+	failRate := request.FailRate
+
+	rand.Seed(time.Now().Unix())
+	if rand.Float32() < failRate {
+		log.Error().Msg("sleep and abort with random failure")
+		time.Sleep(time.Second)
+		return nil, status.Errorf(codes.Aborted, "random failure")
+	}
 	if topN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
 	}
