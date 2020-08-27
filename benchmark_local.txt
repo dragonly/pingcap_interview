@@ -1,0 +1,143 @@
+records:  1000
+BenchmarkLocal/BaselineSingle-1000
+BenchmarkLocal/BaselineSingle-1000-4         	   27340	     40882 ns/op
+BenchmarkLocal/MaxHeapSingle-1000
+BenchmarkLocal/MaxHeapSingle-1000-4          	  710811	      1523 ns/op
+BenchmarkLocal/QuickSelectSingle-1000
+BenchmarkLocal/QuickSelectSingle-1000-4      	  158176	      7324 ns/op
+BenchmarkLocal/BaselineMulti-1000
+BenchmarkLocal/BaselineMulti-1000-4          	   28225	     37211 ns/op
+BenchmarkLocal/MaxHeapMulti-1000
+BenchmarkLocal/MaxHeapMulti-1000-4           	  138668	      9048 ns/op
+BenchmarkLocal/QuickSelectMulti-1000
+BenchmarkLocal/QuickSelectMulti-1000-4       	   58389	     17851 ns/op
+records:  2000
+BenchmarkLocal/BaselineSingle-2000
+BenchmarkLocal/BaselineSingle-2000-4         	   13832	     85535 ns/op
+BenchmarkLocal/MaxHeapSingle-2000
+BenchmarkLocal/MaxHeapSingle-2000-4          	  362126	      3281 ns/op
+BenchmarkLocal/QuickSelectSingle-2000
+BenchmarkLocal/QuickSelectSingle-2000-4      	   81618	     15632 ns/op
+BenchmarkLocal/BaselineMulti-2000
+BenchmarkLocal/BaselineMulti-2000-4          	   20776	     54869 ns/op
+BenchmarkLocal/MaxHeapMulti-2000
+BenchmarkLocal/MaxHeapMulti-2000-4           	  136594	     10621 ns/op
+BenchmarkLocal/QuickSelectMulti-2000
+BenchmarkLocal/QuickSelectMulti-2000-4       	   51465	     25265 ns/op
+records:  4000
+BenchmarkLocal/BaselineSingle-4000
+BenchmarkLocal/BaselineSingle-4000-4         	    6079	    189858 ns/op
+BenchmarkLocal/MaxHeapSingle-4000
+BenchmarkLocal/MaxHeapSingle-4000-4          	  190130	      6050 ns/op
+BenchmarkLocal/QuickSelectSingle-4000
+BenchmarkLocal/QuickSelectSingle-4000-4      	   41757	     28986 ns/op
+BenchmarkLocal/BaselineMulti-4000
+BenchmarkLocal/BaselineMulti-4000-4          	   12142	    101310 ns/op
+BenchmarkLocal/MaxHeapMulti-4000
+BenchmarkLocal/MaxHeapMulti-4000-4           	   94633	     14695 ns/op
+BenchmarkLocal/QuickSelectMulti-4000
+BenchmarkLocal/QuickSelectMulti-4000-4       	   33919	     35809 ns/op
+records:  8000
+BenchmarkLocal/BaselineSingle-8000
+BenchmarkLocal/BaselineSingle-8000-4         	    2888	    399128 ns/op
+BenchmarkLocal/MaxHeapSingle-8000
+BenchmarkLocal/MaxHeapSingle-8000-4          	   98554	     11626 ns/op
+BenchmarkLocal/QuickSelectSingle-8000
+BenchmarkLocal/QuickSelectSingle-8000-4      	   19872	     57288 ns/op
+BenchmarkLocal/BaselineMulti-8000
+BenchmarkLocal/BaselineMulti-8000-4          	    5779	    180288 ns/op
+BenchmarkLocal/MaxHeapMulti-8000
+BenchmarkLocal/MaxHeapMulti-8000-4           	   57356	     20023 ns/op
+BenchmarkLocal/QuickSelectMulti-8000
+BenchmarkLocal/QuickSelectMulti-8000-4       	   23004	     52255 ns/op
+records:  16000
+BenchmarkLocal/BaselineSingle-16000
+BenchmarkLocal/BaselineSingle-16000-4        	    1332	    864109 ns/op
+BenchmarkLocal/MaxHeapSingle-16000
+BenchmarkLocal/MaxHeapSingle-16000-4         	   49357	     23267 ns/op
+BenchmarkLocal/QuickSelectSingle-16000
+BenchmarkLocal/QuickSelectSingle-16000-4     	    9632	    115604 ns/op
+BenchmarkLocal/BaselineMulti-16000
+BenchmarkLocal/BaselineMulti-16000-4         	    3018	    382488 ns/op
+BenchmarkLocal/MaxHeapMulti-16000
+BenchmarkLocal/MaxHeapMulti-16000-4          	   40104	     30299 ns/op
+BenchmarkLocal/QuickSelectMulti-16000
+BenchmarkLocal/QuickSelectMulti-16000-4      	   14583	     87057 ns/op
+records:  32000
+BenchmarkLocal/BaselineSingle-32000
+BenchmarkLocal/BaselineSingle-32000-4        	     637	   1854091 ns/op
+BenchmarkLocal/MaxHeapSingle-32000
+BenchmarkLocal/MaxHeapSingle-32000-4         	   25518	     47039 ns/op
+BenchmarkLocal/QuickSelectSingle-32000
+BenchmarkLocal/QuickSelectSingle-32000-4     	    4796	    233500 ns/op
+BenchmarkLocal/BaselineMulti-32000
+BenchmarkLocal/BaselineMulti-32000-4         	    1282	    813954 ns/op
+BenchmarkLocal/MaxHeapMulti-32000
+BenchmarkLocal/MaxHeapMulti-32000-4          	   26469	     44220 ns/op
+BenchmarkLocal/QuickSelectMulti-32000
+BenchmarkLocal/QuickSelectMulti-32000-4      	    7922	    141148 ns/op
+records:  64000
+BenchmarkLocal/BaselineSingle-64000
+BenchmarkLocal/BaselineSingle-64000-4        	     290	   4079346 ns/op
+BenchmarkLocal/MaxHeapSingle-64000
+BenchmarkLocal/MaxHeapSingle-64000-4         	   12027	     94368 ns/op
+BenchmarkLocal/QuickSelectSingle-64000
+BenchmarkLocal/QuickSelectSingle-64000-4     	    2400	    463768 ns/op
+BenchmarkLocal/BaselineMulti-64000
+BenchmarkLocal/BaselineMulti-64000-4         	     678	   1665159 ns/op
+BenchmarkLocal/MaxHeapMulti-64000
+BenchmarkLocal/MaxHeapMulti-64000-4          	   15339	     80533 ns/op
+BenchmarkLocal/QuickSelectMulti-64000
+BenchmarkLocal/QuickSelectMulti-64000-4      	    3805	    276745 ns/op
+records:  128000
+BenchmarkLocal/BaselineSingle-128000
+BenchmarkLocal/BaselineSingle-128000-4       	     138	   8622569 ns/op
+BenchmarkLocal/MaxHeapSingle-128000
+BenchmarkLocal/MaxHeapSingle-128000-4        	    5599	    223258 ns/op
+BenchmarkLocal/QuickSelectSingle-128000
+BenchmarkLocal/QuickSelectSingle-128000-4    	    1226	   1030742 ns/op
+BenchmarkLocal/BaselineMulti-128000
+BenchmarkLocal/BaselineMulti-128000-4        	     330	   3779931 ns/op
+BenchmarkLocal/MaxHeapMulti-128000
+BenchmarkLocal/MaxHeapMulti-128000-4         	    8610	    152727 ns/op
+BenchmarkLocal/QuickSelectMulti-128000
+BenchmarkLocal/QuickSelectMulti-128000-4     	    2073	    507451 ns/op
+records:  256000
+BenchmarkLocal/BaselineSingle-256000
+BenchmarkLocal/BaselineSingle-256000-4       	      64	  18532739 ns/op
+BenchmarkLocal/MaxHeapSingle-256000
+BenchmarkLocal/MaxHeapSingle-256000-4        	    2377	    508315 ns/op
+BenchmarkLocal/QuickSelectSingle-256000
+BenchmarkLocal/QuickSelectSingle-256000-4    	     576	   2002445 ns/op
+BenchmarkLocal/BaselineMulti-256000
+BenchmarkLocal/BaselineMulti-256000-4        	     154	   7564173 ns/op
+BenchmarkLocal/MaxHeapMulti-256000
+BenchmarkLocal/MaxHeapMulti-256000-4         	    3780	    326285 ns/op
+BenchmarkLocal/QuickSelectMulti-256000
+BenchmarkLocal/QuickSelectMulti-256000-4     	    1076	   1194559 ns/op
+records:  512000
+BenchmarkLocal/BaselineSingle-512000
+BenchmarkLocal/BaselineSingle-512000-4       	      28	  42846740 ns/op
+BenchmarkLocal/MaxHeapSingle-512000
+BenchmarkLocal/MaxHeapSingle-512000-4        	    1202	   1095074 ns/op
+BenchmarkLocal/QuickSelectSingle-512000
+BenchmarkLocal/QuickSelectSingle-512000-4    	     290	   4030172 ns/op
+BenchmarkLocal/BaselineMulti-512000
+BenchmarkLocal/BaselineMulti-512000-4        	      63	  16358757 ns/op
+BenchmarkLocal/MaxHeapMulti-512000
+BenchmarkLocal/MaxHeapMulti-512000-4         	    1940	    531369 ns/op
+BenchmarkLocal/QuickSelectMulti-512000
+BenchmarkLocal/QuickSelectMulti-512000-4     	     472	   2306861 ns/op
+records:  1024000
+BenchmarkLocal/BaselineSingle-1024000
+BenchmarkLocal/BaselineSingle-1024000-4      	      14	  84709574 ns/op
+BenchmarkLocal/MaxHeapSingle-1024000
+BenchmarkLocal/MaxHeapSingle-1024000-4       	     562	   2099118 ns/op
+BenchmarkLocal/QuickSelectSingle-1024000
+BenchmarkLocal/QuickSelectSingle-1024000-4   	     142	   8338412 ns/op
+BenchmarkLocal/BaselineMulti-1024000
+BenchmarkLocal/BaselineMulti-1024000-4       	      36	  35605571 ns/op
+BenchmarkLocal/MaxHeapMulti-1024000
+BenchmarkLocal/MaxHeapMulti-1024000-4        	    1024	   1080199 ns/op
+BenchmarkLocal/QuickSelectMulti-1024000
+BenchmarkLocal/QuickSelectMulti-1024000-4    	     268	   4161323 ns/op

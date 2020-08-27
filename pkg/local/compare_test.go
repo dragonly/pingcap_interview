@@ -73,34 +73,37 @@ func BenchmarkLocal(b *testing.B) {
 	topN := 10
 	records := storage.GenRecords(n, math.MaxInt64)
 	b.ResetTimer()
-	b.Run("BaselineSingle", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			GetTopNBaseline(records, topN)
-		}
-	})
-	b.Run("MaxHeapSingle", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			GetTopNMaxHeap(records, topN)
-		}
-	})
-	b.Run("QuickSelectSingle", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			GetTopNQuickSelect(records, topN)
-		}
-	})
-	b.Run("BaselineMulti", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			GetTopNParallel(records, topN, GetTopNBaseline)
-		}
-	})
-	b.Run("MaxHeapMulti", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			GetTopNParallel(records, topN, GetTopNMaxHeap)
-		}
-	})
-	b.Run("QuickSelectMulti", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			GetTopNParallel(records, topN, GetTopNQuickSelect)
-		}
-	})
+	for j := 1000; j < 1000*1024+1; j = j * 2 {
+		fmt.Println("records: ", j)
+		b.Run(fmt.Sprintf("BaselineSingle-%d", j), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				GetTopNBaseline(records[:j], topN)
+			}
+		})
+		b.Run(fmt.Sprintf("MaxHeapSingle-%d", j), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				GetTopNMaxHeap(records[:j], topN)
+			}
+		})
+		b.Run(fmt.Sprintf("QuickSelectSingle-%d", j), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				GetTopNQuickSelect(records[:j], topN)
+			}
+		})
+		b.Run(fmt.Sprintf("BaselineMulti-%d", j), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				GetTopNParallel(records[:j], topN, GetTopNBaseline)
+			}
+		})
+		b.Run(fmt.Sprintf("MaxHeapMulti-%d", j), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				GetTopNParallel(records[:j], topN, GetTopNMaxHeap)
+			}
+		})
+		b.Run(fmt.Sprintf("QuickSelectMulti-%d", j), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				GetTopNParallel(records[:j], topN, GetTopNQuickSelect)
+			}
+		})
+	}
 }
