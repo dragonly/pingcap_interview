@@ -29,4 +29,6 @@ services:
     command: ./topn cluster getTopNKeysInRange --minKey 1 --maxKey 9223372036854775807 --topN 10 --debug
     depends_on:
       - mapper1
+      - mapper2
+      - mapper3
     network_mode: host

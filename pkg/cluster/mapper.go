@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"net"
+	_ "net/http/pprof"
 	"sort"
 	"time"
 )
@@ -35,7 +35,7 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	deadline, hasDeadline := ctx.Deadline()
 	log.Debug().Msgf("time remains for request: %d", deadline.Sub(time.Now()))
 	t0 := time.Now()
-	// TODO: optimization: 先只加载 key，计算出结果后再读取响应的 topN 返回结果
+	// TODO: optimization: 先只加载 key，计算出结果后再读取相应的 topN 返回结果
 	records := storage.ReadRecordsFile(filename, blockIndex)
 	if hasDeadline && time.Now().Sub(deadline) > 0 {
 		return nil, status.Errorf(codes.DeadlineExceeded, "deadline exceeded, skip calculation")
@@ -61,6 +61,9 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 			Int64("local.GetTopNMaxHeap()", t2.Sub(t1).Microseconds()).
 			Int64("copy result", t3.Sub(t2).Microseconds())).
 		Msg("topN records in block")
+	for _, r := range records {
+		r.Data = nil
+	}
 	return &TopNInBlockResponse{
 		Records: pRecords,
 	}, nil
@@ -123,11 +126,12 @@ func StartServer(serverIndex int) {
 		log.Fatal().Msgf("failed to listen: %v", err)
 	}
 	log.Info().Msgf("listening on %s", address)
-	s := grpc.NewServer(
-		grpc.KeepaliveParams(keepalive.ServerParameters{
-			MaxConnectionIdle: 5 * time.Minute, // <--- This fixes it!
-		}),
-	)
+	s := grpc.NewServer()
+	//s := grpc.NewServer(
+	//	grpc.KeepaliveParams(keepalive.ServerParameters{
+	//		MaxConnectionIdle: 5 * time.Minute,
+	//	}),
+	//)
 	RegisterTopNServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatal().Msgf("failed to serve: %v", err)

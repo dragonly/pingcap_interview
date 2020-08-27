@@ -127,10 +127,16 @@ func (d *Dispatcher) Start() {
 			case result := <-d.JobRescheduleChan:
 				if result.Error != nil { // 失败任务重试
 					// TODO: 处理 tcp 连接断开的情况，应该等待 gRPC 重连，可以在 Job 中加一段等待时间
-					log.Error().Int("id", result.Job.ID).Msg("dispatcher re-dispatch job")
+					log.Error().
+						Int("id", result.Job.ID).
+						Int("queueing jobs", len(d.JobChan)).
+						Msg("dispatcher re-dispatch job")
 					d.JobChan <- result.Job
 				} else {
-					log.Info().Int("id", result.Job.ID).Msg("dispatcher return successful job")
+					log.Info().
+						Int("id", result.Job.ID).
+						Int("queueing jobs", len(d.JobChan)).
+						Msg("dispatcher return successful job")
 					d.JobResultChan <- result
 				}
 			case <-d.StopChan:
