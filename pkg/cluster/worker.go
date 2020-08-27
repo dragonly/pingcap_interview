@@ -27,21 +27,21 @@ type Worker struct {
 	Client     *TopNClient // gRPC client，请求对应 mapper 节点执行实际计算任务
 }
 
-func DoRequest(client TopNClient, req *TopNInBlockRequest) (*TopNInBlockResponse, error) {
+func DoRequest(client TopNClient, job Job) (*TopNInBlockResponse, error) {
 	timeoutMs := viper.GetInt("cluster.master.request.timeout")
 	log.Debug().Msgf("start DoRequest() with timeout=%dms", timeoutMs)
 	//fmt.Println(time.Duration(timeoutMs)*time.Millisecond)
 	//fmt.Println(30000*time.Millisecond)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutMs)*time.Millisecond)
 	defer cancel()
-	resp, err := client.TopNInBlock(ctx, req, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	resp, err := client.TopNInBlock(ctx, job.Request, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if resp != nil {
 		for _, r := range resp.Records {
 			r.Data = nil
 		}
 	}
 	if err != nil {
-		log.Error().Msgf("client.TopNInBlock error: %v", err)
+		log.Error().Int("id", job.ID).Msgf("client.TopNInBlock error: %v", err)
 	}
 	return resp, err
 }
@@ -53,7 +53,7 @@ func (w *Worker) Start() {
 			select {
 			case job := <-w.JobChan:
 				log.Debug().Int("id", job.ID).Int("channels", len(w.JobChan)).Msg("worker start job")
-				resp, err := DoRequest(*w.Client, job.Request)
+				resp, err := DoRequest(*w.Client, job)
 				if err != nil {
 					log.Error().Int("id", job.ID).Str("error", err.Error()).Msg("worker job failed")
 				} else {

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"net"
 	"sort"
@@ -122,7 +123,11 @@ func StartServer(serverIndex int) {
 		log.Fatal().Msgf("failed to listen: %v", err)
 	}
 	log.Info().Msgf("listening on %s", address)
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: 5 * time.Minute, // <--- This fixes it!
+		}),
+	)
 	RegisterTopNServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatal().Msgf("failed to serve: %v", err)
