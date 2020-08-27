@@ -2,15 +2,16 @@ package cluster
 
 import (
 	"context"
-	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/local"
 	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"sort"
 	"time"
 )
 
+// GetTopNKeysInRangeBlocked 计算当前 block 内的 topN
 func GetTopNKeysInRangeBlocked(minKey, maxKey int64, topN int) {
 	// 获取计算任务所需参数
 	addresses := viper.GetStringSlice("cluster.master.dial.addresses")
@@ -86,15 +87,16 @@ func GetTopNKeysInRangeBlocked(minKey, maxKey int64, topN int) {
 		}
 	}
 	topNRecords := local.GetTopNBaseline(records, topN)
+	sort.Sort(storage.SortByRecordKey(topNRecords))
 
 	// debug 用，只看 key
 	for _, r := range topNRecords {
 		r.Data = nil
 	}
-
 	log.Info().Interface("keys", topNRecords).Msgf("got top n records")
 }
 
+// GetTopNKeysInRangeAll 一次性计算所有文件 block，用于验证 GetTopNKeysInRangeBlocked 分块计算的正确性
 func GetTopNKeysInRangeAll(minKey, maxKey int64, topN int) {
 	// 获取计算任务所需参数
 	addresses := viper.GetStringSlice("cluster.master.dial.addresses")
@@ -128,5 +130,16 @@ func GetTopNKeysInRangeAll(minKey, maxKey int64, topN int) {
 		TopN: int64(topN),
 	}
 	resp, err := client.TopNAll(context.Background(), req, grpc.MaxCallRecvMsgSize(1024*1024*1024))
-	fmt.Println(resp)
+
+	// debug 用，只看 key
+	var topNRecords []storage.Record
+	for _, pRecord := range resp.Records {
+		record := storage.Record{
+			Key:  pRecord.Key,
+			Data: nil,
+		}
+		topNRecords = append(topNRecords, record)
+	}
+	sort.Sort(storage.SortByRecordKey(topNRecords))
+	log.Info().Interface("keys", topNRecords).Msgf("got top n records")
 }

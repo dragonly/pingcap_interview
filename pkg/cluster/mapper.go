@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"context"
-	"fmt"
 	"github.com/dragonly/pingcap_interview/pkg/local"
 	"github.com/dragonly/pingcap_interview/pkg/storage"
 	"github.com/rs/zerolog"
@@ -26,6 +25,8 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	topN := request.TopN
 	minKey := request.KeyRange.MinKey
 	maxKey := request.KeyRange.MaxKey
+	blockIndex := request.DataBlock.BlockIndex
+	filename := request.DataBlock.Filename
 	if topN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
 	}
@@ -34,7 +35,7 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	log.Debug().Msgf("time remains for request: %d", deadline.Sub(time.Now()))
 	t0 := time.Now()
 	// TODO: optimization: 先只加载 key，计算出结果后再读取响应的 topN 返回结果
-	records := storage.ReadRecordsFile(request.DataBlock.Filename, request.DataBlock.BlockIndex)
+	records := storage.ReadRecordsFile(filename, blockIndex)
 	if hasDeadline && time.Now().Sub(deadline) > 0 {
 		return nil, status.Errorf(codes.DeadlineExceeded, "deadline exceeded, skip calculation")
 	}
@@ -50,13 +51,15 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	}
 	t3 := time.Now()
 	log.Info().
+		Int64("blockIndex", blockIndex).
+		Str("filename", filename).
 		Int("records in block", len(records)).
 		Int("topN records in block", len(topNRecords)).
 		Dict("time_us", zerolog.Dict().
 			Int64("kv.ReadRecordsFile()", t1.Sub(t0).Microseconds()).
 			Int64("local.GetTopNMaxHeap()", t2.Sub(t1).Microseconds()).
 			Int64("copy result", t3.Sub(t2).Microseconds())).
-		Msg("return topN records in block")
+		Msg("topN records in block")
 	return &TopNInBlockResponse{
 		Records: pRecords,
 	}, nil
@@ -69,6 +72,8 @@ func (s *server) TopNAll(ctx context.Context, request *TopNInBlockRequest) (*Top
 	topN := request.TopN
 	minKey := request.KeyRange.MinKey
 	maxKey := request.KeyRange.MaxKey
+	//blockIndex := request.DataBlock.BlockIndex
+	filename := request.DataBlock.Filename
 
 	if topN <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid topN=%d", topN)
@@ -77,24 +82,26 @@ func (s *server) TopNAll(ctx context.Context, request *TopNInBlockRequest) (*Top
 	var topNRecords []storage.Record
 	for i := 0; i < blockNum; i++ {
 		t0 := time.Now()
-		records := storage.ReadRecordsFile(request.DataBlock.Filename, int64(i))
+		records := storage.ReadRecordsFile(filename, int64(i))
 		t1 := time.Now()
 		tmp := local.GetTopNMaxHeapWithKeyRange(records, int(topN), minKey, maxKey)
 		t2 := time.Now()
 		log.Info().
+			Int("blockIndex", i).
+			Str("filename", filename).
 			Int("records in block", len(records)).
 			Int("topN records in block", len(topNRecords)).
 			Dict("time_us", zerolog.Dict().
 				Int64("kv.ReadRecordsFile()", t1.Sub(t0).Microseconds()).
 				Int64("local.GetTopNMaxHeap()", t2.Sub(t1).Microseconds())).
-			Msg("return topN records in block")
+			Msg("topN records in block")
 		for _, r := range tmp {
 			topNRecords = append(topNRecords, r)
 		}
 	}
 	topNRecords = local.GetTopNMaxHeap(topNRecords, int(topN))
 	sort.Sort(storage.SortByRecordKey(topNRecords))
-	fmt.Println(topNRecords)
+	//fmt.Println(topNRecords)
 
 	pRecords := make([]*Record, len(topNRecords))
 	for i, r := range topNRecords {
