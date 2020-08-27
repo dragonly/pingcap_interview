@@ -32,25 +32,25 @@ func TestHeapResult(t *testing.T) {
 	records3 := make([]storage.Record, n)
 	records4 := make([]storage.Record, n)
 	records5 := make([]storage.Record, n)
-	//records6 := make([]kv.Record, n)
+	records6 := make([]storage.Record, n)
 	storage.CopyRecords(records1, records)
 	storage.CopyRecords(records2, records)
 	storage.CopyRecords(records3, records)
 	storage.CopyRecords(records4, records)
 	storage.CopyRecords(records5, records)
-	//kv.CopyRecords(records6, records)
+	storage.CopyRecords(records6, records)
 	result1 := GetTopNBaseline(records1, topN)
 	result2 := GetTopNMaxHeap(records2, topN)
 	result3 := GetTopNQuickSelect(records3, topN)
 	result4 := GetTopNParallel(records4, topN, GetTopNBaseline)
 	result5 := GetTopNParallel(records5, topN, GetTopNMaxHeap)
-	//result6 := GetTopNParallel(records5, topN, GetTopNQuickSelect)
+	result6 := GetTopNParallel(records6, topN, GetTopNQuickSelect)
 	sort.Sort(storage.SortByRecordKey(result1))
 	sort.Sort(storage.SortByRecordKey(result2))
 	sort.Sort(storage.SortByRecordKey(result3))
 	sort.Sort(storage.SortByRecordKey(result4))
 	sort.Sort(storage.SortByRecordKey(result5))
-	//sort.Sort(kv.SortByRecordKey(result6))
+	sort.Sort(storage.SortByRecordKey(result6))
 	if !reflect.DeepEqual(result1, result2) {
 		t.Errorf("single core heap method returns wrong results")
 	}
@@ -63,9 +63,9 @@ func TestHeapResult(t *testing.T) {
 	if !reflect.DeepEqual(result1, result5) {
 		t.Errorf("multi core heap method returns wrong results")
 	}
-	//if !reflect.DeepEqual(result1, result6) {
-	//	t.Errorf("multi core quick-select method returns wrong results")
-	//}
+	if !reflect.DeepEqual(result1, result6) {
+		t.Errorf("multi core quick-select method returns wrong results")
+	}
 }
 
 func BenchmarkLocal(b *testing.B) {
