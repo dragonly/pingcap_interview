@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 	"net"
 	_ "net/http/pprof"
+	"runtime"
 	"sort"
 	"time"
 )
@@ -64,6 +65,9 @@ func (s *server) TopNInBlock(ctx context.Context, request *TopNInBlockRequest) (
 	for _, r := range records {
 		r.Data = nil
 	}
+	records = nil
+	topNRecords = nil
+	runtime.GC()
 	return &TopNInBlockResponse{
 		Records: pRecords,
 	}, nil
