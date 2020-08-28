@@ -32,7 +32,7 @@ func TestCodec(t *testing.T) {
 	}
 	records := genRecordsFiles(rGen, fbMgr, true)
 	recordsReadBack := ReadRecordsFile("test_codec", 0)
-	log.Info().Msgf("len(records) = %d", len(records))
+	//log.Info().Msgf("len(records) = %d", len(records))
 	for i, r := range records {
 		rrb := recordsReadBack[i]
 		if r.Key != rrb.Key {

@@ -78,7 +78,7 @@ type Record struct {
 #### 运行
 在项目根目录执行以下命令，运行单元测试和性能测试
 ```bash
-go test -v -bench=. -count=1 github.com/dragonly/pingcap_interview/pkg/local
+go test -v -bench=. -count=1 github.com/dragonly/pingcap_interview/pkg/...
 ```
 
 #### 性能测试结果
