@@ -100,3 +100,39 @@ go test -v -bench=. -count=1 github.com/dragonly/pingcap_interview/pkg/local
 生成数据后，即可进行集成测试。集成测试环境由 `docker-compose.yaml` 文件定义，执行 `docker-compose up --build` 命令即可启动集成测试环境。
 
 集成测试中，定义了 3 个 mapper 节点和一个 master 节点，master 启动查询命令后，会连接到 3 个 mapper 节点，并使用 dispatcher/worker 模式新建对应的 goroutine 把具体任务调度给空闲的 worker goroutine，后者会使用 gRPC client 调度 mapper 执行计算任务，等待结果，并返回给 dispatcher，最终在 master 端执行 reduce 操作获取最终 topN 数据。
+
+#### 本地测试
+由于 1TB 实在太大，本地使用 1.5G 小数据量进行了测试：blockSize 设置成 512MB，blockNum 设置成 3，即 master 调度每个 mapper 节点计算一个 block 中的 topN 后返回。为了验证分布式计算结果的正确性，`pkg/cluster/mapper.go` 中实现了 `TopNInBlock` 和 `TopNAll` 两个接口，前者只计算请求体中要求的 blockIndex 数据块，与 master 协调实现题目要求的分布式计算过程；而后者则使用单个 mapper 完成所有 block 的计算。分别使用命令
+```bash
+./pingcap_interview cluster getTopNKeysInRange --minKey 0 --maxKey 9223372036854775807 --topN 10 --debug
+```
+和
+```bash
+./pingcap_interview cluster getTopNKeysInRange --minKey 0 --maxKey 9223372036854775807 --topN 10 --oneMapper --debug
+```
+测试 `TopNInBlock` 和 `TopNAll` 接口，区别在于 `--oneMapper` 参数会使用一个 mapper 计算，即调用 `TopNAll`。
+
+本地小数据量测试显示，计算结果一致。
+
+#### 随机失败
+为了测试任务重试机制，`cluster getTopNKeysInRangeCmd` 子命令中加入了 `--failRate` flag，用于控制 mapper 随机失败的比例。比如设置 `--failRate 0.5`，则任务有 50% 的概率失败，从日志中可以观察到 re-dispatch，即任务被重新分配给空闲的 worker 重试。
+
+使用 `--failRate 0.5` 和不设置 `--failRate`，测试结果一致，证明任务重试机制实现正常。
+
+#### 阿里云测试
+由于非常想验证题目是否完成，因此买了阿里云 2c-4g 性能突发型实例进行实测🤑。由于只实现了单线程数据生成器，执行 `go run main.go gen` 后，1TB 数据生成就花了一个多小时😂。
+
+实测运行 `TopNInBlock` 和 `TopNAll` 两个接口后，结果一致。
+```
+TopNInBlock result:
+{"level":"info","keys":[{"Key":20564118785,"Data":""},{"Key":25199421511,"Data":""},{"Key":67318487768,"Data":""},{"Key":71102575907,"Data":""},{"Key":88010636455,"Data":""},{"Key":91038516199,"Data":""},{"Key":182734170678,"Data":""},{"Key":188733214549,"Data":""},{"Key":228505318499,"Data":""},{"Key":259780656828,"Data":""}],"time":1598556283983,"caller":"/app/pkg/cluster/master.go:96","message":"got top n records"}
+TopNAll:
+{"level":"info","keys":[{"Key":20564118785,"Data":null},{"Key":25199421511,"Data":null},{"Key":67318487768,"Data":null},{"Key":71102575907,"Data":null},{"Key":88010636455,"Data":null},{"Key":91038516199,"Data":null},{"Key":182734170678,"Data":null},{"Key":188733214549,"Data":null},{"Key":228505318499,"Data":null},{"Key":259780656828,"Data":null}],"time":1598585644762,"caller":"/app/pkg/cluster/master.go:144","message":"got top n records"}
+```
+
+这里为了方便对比，Data 字段被置空。
+
+#### 优化点
+经过一些测试，发现整个系统有一些优化点：
+1. IO 时间。mapper 读取文件占用较多时间，比如读 1s 的文件只需要计算几 ms，因此瓶颈主要在文件 IO 上。这种情况可以通过构建索引解决，比如构建一个只包含 key 的二级索引文件，指向数据块文件中对应 record 的 offset，这样只需要加载 key 索引文件就能计算出 topN，在返回的时候仅仅读取 topN 对应 record 数据，大大降低文件 IO 时间。不过这个点不影响题目解答的意思，而且实际情况下分布式系统经常会遇到网络和文件 IO 瓶颈，倒也是挺符合实际🤣。
+2. 每次计算需要读取整个 record block，除了上述 IO 时间外，对内存压力也比较大，从这个角度讲也应该做一些索引之类的操作，在计算时只读取 key 部分到内存，返回结果时再读取具体数据。

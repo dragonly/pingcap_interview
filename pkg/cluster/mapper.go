@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 	"math/rand"
 	"net"
-	_ "net/http/pprof"
+	//_ "net/http/pprof"
 	"runtime"
 	"sort"
 	"time"
@@ -138,7 +138,6 @@ func StartServer(serverIndex int) {
 	if err != nil {
 		log.Fatal().Msgf("failed to listen: %v", err)
 	}
-	log.Info().Msgf("listening on %s", address)
 	s := grpc.NewServer()
 	//s := grpc.NewServer(
 	//	grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -146,6 +145,10 @@ func StartServer(serverIndex int) {
 	//	}),
 	//)
 	RegisterTopNServer(s, &server{})
+	//go func() {
+	//	fmt.Println(http.ListenAndServe("localhost:6060", nil))
+	//}()
+	log.Info().Msgf("listening on %s", address)
 	if err := s.Serve(lis); err != nil {
 		log.Fatal().Msgf("failed to serve: %v", err)
 	}
